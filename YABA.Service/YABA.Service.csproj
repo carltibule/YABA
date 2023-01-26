@@ -10,4 +10,10 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\YABA.Common\YABA.Common.csproj" />
+    <ProjectReference Include="..\YABA.Data\YABA.Data.csproj" />
+    <ProjectReference Include="..\YABA.Models\YABA.Models.csproj" />
+  </ItemGroup>
+
 </Project>

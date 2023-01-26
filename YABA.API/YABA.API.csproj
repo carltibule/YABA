@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\YABA.Common\YABA.Common.csproj" />
     <ProjectReference Include="..\YABA.Data\YABA.Data.csproj" />
     <ProjectReference Include="..\YABA.Service\YABA.Service.csproj" />
   </ItemGroup>

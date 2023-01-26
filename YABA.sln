@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YABA.API", "YABA.API\YABA.A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YABA.Models", "YABA.Models\YABA.Models.csproj", "{DDA30925-F844-426B-8B90-3E6E258BD407}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YABA.Data", "YABA.Data\YABA.Data.csproj", "{461E9D5A-3C06-4CCB-A466-76BBB9BB7BF5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YABA.Data", "YABA.Data\YABA.Data.csproj", "{461E9D5A-3C06-4CCB-A466-76BBB9BB7BF5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YABA.Service", "YABA.Service\YABA.Service.csproj", "{0098D0A8-0273-46F1-9FE7-B0409442251A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YABA.Service", "YABA.Service\YABA.Service.csproj", "{0098D0A8-0273-46F1-9FE7-B0409442251A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YABA.Common", "YABA.Common\YABA.Common.csproj", "{CA107B5D-4B8E-4515-8380-CB474C57F79C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{0098D0A8-0273-46F1-9FE7-B0409442251A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0098D0A8-0273-46F1-9FE7-B0409442251A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0098D0A8-0273-46F1-9FE7-B0409442251A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA107B5D-4B8E-4515-8380-CB474C57F79C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA107B5D-4B8E-4515-8380-CB474C57F79C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA107B5D-4B8E-4515-8380-CB474C57F79C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA107B5D-4B8E-4515-8380-CB474C57F79C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
