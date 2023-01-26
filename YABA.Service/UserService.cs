@@ -38,5 +38,11 @@ namespace YABA.Service
             var registedUser = _context.Users.Add(userToRegister);
             return _context.SaveChanges() > 0 ? new UserDTO(registedUser.Entity) : null;
         }
+
+        public int GetUserId(string authProviderId)
+        {
+            var user = _roContext.Users.FirstOrDefault(x => x.Auth0Id == authProviderId);
+            return user != null ? user.Id : 0;
+        }
     }
 }
