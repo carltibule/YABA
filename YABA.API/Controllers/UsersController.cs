@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -12,14 +13,16 @@ namespace YABA.API.Controllers
     [Authorize, Route("api/v{version:apiVersion}/[controller]")]
     public class UsersController : ControllerBase
     {
+        private readonly IMapper _mapper;
         private readonly IUserService _userService;
 
-        public UsersController(IUserService userService)
+        public UsersController(IMapper mapper, IUserService userService)
         {
+            _mapper = mapper;
             _userService = userService;
         }
 
-        [HttpPost("Register")]
+        [HttpPost]
         [ProducesResponseType(typeof(UserResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
@@ -34,7 +37,7 @@ namespace YABA.API.Controllers
             if (isRegistered) return NoContent();
 
             var registedUser = _userService.RegisterUser(authProviderId);
-            return Ok(new UserResponse(registedUser));
+            return Ok(_mapper.Map<UserResponse>(registedUser));
         }
     }
 }

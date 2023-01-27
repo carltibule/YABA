@@ -1,7 +1,8 @@
-﻿using System.Linq;
+﻿using AutoMapper;
+using System.Linq;
+using YABA.Common.DTOs;
 using YABA.Data.Context;
 using YABA.Models;
-using YABA.Service.DTO;
 using YABA.Service.Interfaces;
 
 namespace YABA.Service
@@ -10,11 +11,13 @@ namespace YABA.Service
     {
         private readonly YABAReadOnlyContext _roContext;
         private readonly YABAReadWriteContext _context;
+        private readonly IMapper _mapper;
 
-        public UserService (YABAReadOnlyContext roContext, YABAReadWriteContext context)
+        public UserService (YABAReadOnlyContext roContext, YABAReadWriteContext context, IMapper mapper)
         {
             _roContext = roContext;
             _context = context;
+            _mapper = mapper;
         }
 
         public bool IsUserRegistered(string authProviderId)
@@ -27,7 +30,7 @@ namespace YABA.Service
             if(IsUserRegistered(authProviderId))
             {
                 var user = _roContext.Users.FirstOrDefault(x => x.Auth0Id == authProviderId);
-                return new UserDTO(user);
+                return _mapper.Map<UserDTO>(user);
             }
 
             var userToRegister = new User
@@ -36,7 +39,7 @@ namespace YABA.Service
             };
 
             var registedUser = _context.Users.Add(userToRegister);
-            return _context.SaveChanges() > 0 ? new UserDTO(registedUser.Entity) : null;
+            return _context.SaveChanges() > 0 ? _mapper.Map<UserDTO>(registedUser.Entity) : null;
         }
 
         public int GetUserId(string authProviderId)

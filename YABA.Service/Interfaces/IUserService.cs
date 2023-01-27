@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using YABA.Service.DTO;
+﻿using YABA.Common.DTOs;
 
 namespace YABA.Service.Interfaces
 {

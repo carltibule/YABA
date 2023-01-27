@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
@@ -5,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
+using YABA.API.Middlewares;
 using YABA.API.Settings;
 using YABA.API.Settings.Swashbuckle;
 using YABA.Data.Configuration;
@@ -46,6 +48,15 @@ builder.Services.AddServiceProjectDependencyInjectionConfiguration(configuration
 builder.Services.AddDataProjectDependencyInjectionConfiguration(configuration);
 builder.Services.AddControllers().AddNewtonsoftJson();
 
+// Add AutoMapper profiles
+var mapperConfiguration = new MapperConfiguration(mapperConfiguration =>
+{
+    mapperConfiguration.AddProfile(new YABA.API.Settings.AutoMapperProfile());
+    mapperConfiguration.AddProfile(new YABA.Service.Configuration.AutoMapperProfile());
+});
+
+IMapper mapper = mapperConfiguration.CreateMapper();
+builder.Services.AddSingleton(mapper);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -87,5 +98,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Add custom middlewares
+app.UseMiddleware<AddCustomClaimsMiddleware>();
 
 app.Run();
