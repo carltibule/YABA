@@ -35,9 +35,11 @@ namespace YABA.API.Controllers
         [HttpPost("{id}/Tags")]
         [ProducesResponseType(typeof(IEnumerable<GenericResponse<string>>),(int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> UpdateBookmarkTags(int id, [FromBody] IEnumerable<string> tags)
+        public async Task<IActionResult> UpdateBookmarkTags(int id, [FromBody] UpdateBookmarkTagRequest request)
         {
-            var result = await _bookmarkService.UpdateBookmarkTags(id, tags);
+            if (request.Tags == null) return BadRequest();
+
+            var result = await _bookmarkService.UpdateBookmarkTags(id, request.Tags);
 
             if (result.All(x => !x.IsSuccessful)) return NotFound();
 

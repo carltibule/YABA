@@ -15,7 +15,7 @@ namespace YABA.Common.DTOs.Bookmarks
         public string Note { get; set; }
         public bool IsHidden { get; set; }
         public string Url { get; set; }
-        public IList<TagDTO> Tags { get; set; } = new List<TagDTO>();
+        public IList<TagSummaryDTO> Tags { get; set; } = new List<TagSummaryDTO>();
 
     }
 }

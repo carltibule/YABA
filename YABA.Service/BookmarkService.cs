@@ -40,43 +40,34 @@ namespace YABA.Service
         {
             var currentUserId = GetCurrentUserId();
 
+            var userBookmarks = _roContext.Bookmarks.Where(x => x.UserId == currentUserId).ToDictionary(k => k.Id, v => v);
             var bookmarkTagsLookup = _roContext.BookmarkTags
-                .Where(x => x.Bookmark.UserId == currentUserId)
-                .GroupBy(x => x.BookmarkId)
-                .ToDictionary(key => key.Key, value => value.Select(x => x.TagId));
+                    .Include(x => x.Tag)
+                    .Where(x => userBookmarks.Keys.Contains(x.BookmarkId))
+                    .ToList()
+                    .GroupBy(x => x.BookmarkId)
+                    .ToDictionary(k => k.Key, v => v.ToList());
 
-            var bookmarksLookup = _roContext.Bookmarks
-                .Where(x => bookmarkTagsLookup.Keys.Contains(x.Id))
-                .ToDictionary(key => key.Id, value => value);
+            var userBookmarkDTOs = new List<BookmarkDTO>();
 
-            var tagsLookup = _roContext.Tags
-                .Where(x => bookmarkTagsLookup.Values.SelectMany(y => y.ToList()).Contains(x.Id))
-                .ToDictionary(key => key.Id, value => value);
-
-            var bookmarks = new List<BookmarkDTO>();
-
-            foreach(var bookmarkTagLookup in bookmarkTagsLookup)
+            foreach(var bookmark in userBookmarks)
             {
-                var bookmarkExists = bookmarksLookup.TryGetValue(bookmarkTagLookup.Key, out Bookmark bookmark);
+                var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark.Value);
+                bookmarkTagsLookup.TryGetValue(bookmark.Key, out var bookmarkTags);
 
-                if (!bookmarkExists) continue;
-
-                var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark);
-
-                foreach(var tagId in bookmarkTagLookup.Value)
+                if(bookmarkTags != null)
                 {
-                    var tagExists = tagsLookup.TryGetValue(tagId, out Tag tag);
-
-                    if (!tagExists) continue;
-
-                    var tagDTO = _mapper.Map<TagDTO>(tag);
-                    bookmarkDTO.Tags.Add(tagDTO);
+                    foreach (var bookmarkTag in bookmarkTags)
+                    {
+                        var tagDTO = _mapper.Map<TagSummaryDTO>(bookmarkTag.Tag);
+                        bookmarkDTO.Tags.Add(tagDTO);
+                    }
                 }
 
-                bookmarks.Add(bookmarkDTO);
+                userBookmarkDTOs.Add(bookmarkDTO);
             }
 
-            return new CrudResultDTO<IEnumerable<BookmarkDTO>> { Entry = bookmarks, CrudResult = CrudResultLookup.RetrieveSuccessful };
+            return new CrudResultDTO<IEnumerable<BookmarkDTO>> { Entry = userBookmarkDTOs, CrudResult = CrudResultLookup.RetrieveSuccessful };
         }
 
         public async Task<CrudResultDTO<CreateBookmarkRequestDTO>?> CreateBookmark(CreateBookmarkRequestDTO request)
@@ -130,15 +121,14 @@ namespace YABA.Service
 
             // Add tags that are not yet in the database
             var savedUserTags = _context.Tags.Where(x => x.UserId == currentUserId).ToList();
-            var tagsToSave = tags.Except(savedUserTags.Select(x => x.Name).ToHashSet()).Select(x => new Tag { Name = x, UserId = currentUserId });
+            var tagsToSave = tags.Except(savedUserTags.Select(x => x.Name).ToHashSet()).Select(x => new Tag { Name = x, UserId = currentUserId }).ToList();
             await _context.Tags.AddRangeAsync(tagsToSave);
-
-            if (await _context.SaveChangesAsync() <= 0) return crudResults;
+            await _context.SaveChangesAsync();
 
             // Add newly added tags to the lookup
             savedUserTags.AddRange(tagsToSave);
 
-            var existingBookmarkTags = _context.BookmarkTags.Include(x => x.Tag).Where(x => x.BookmarkId == id).ToList();
+            var existingBookmarkTags = _roContext.BookmarkTags.Include(x => x.Tag).Where(x => x.BookmarkId == id).ToList();
             var existingBookmarkTagsLookup = existingBookmarkTags.ToDictionary(k => k.TagId, v => v.Tag.Name);
 
             var bookmarkTagsToRemove = existingBookmarkTagsLookup
@@ -171,7 +161,7 @@ namespace YABA.Service
                 .ToList();
 
             var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark);
-            bookmarkDTO.Tags = _mapper.Map<IList<TagDTO>>(bookmarkTags);
+            bookmarkDTO.Tags = _mapper.Map<IList<TagSummaryDTO>>(bookmarkTags);
 
             return new CrudResultDTO<BookmarkDTO> { CrudResult = CrudResultLookup.RetrieveSuccessful, Entry = bookmarkDTO };
         }
