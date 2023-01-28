@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
+using HtmlAgilityPack;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using YABA.Common.DTOs;
 using YABA.Common.DTOs.Bookmarks;
@@ -84,6 +87,7 @@ namespace YABA.Service
             }
 
             var bookmark = _mapper.Map<Bookmark>(request);
+            UpdateBookmarkWithMetaData(bookmark);
             bookmark.UserId = currentUserId;
 
             await _context.Bookmarks.AddAsync(bookmark);
@@ -106,6 +110,8 @@ namespace YABA.Service
             bookmark.Description = request.Description;
             bookmark.Note = request.Note;
             bookmark.IsHidden = request.IsHidden;
+            bookmark.Url = request.Url;
+            UpdateBookmarkWithMetaData(bookmark);
 
             if (await _context.SaveChangesAsync() > 0) crudResult.CrudResult = CrudResultLookup.UpdateSucceeded;
 
@@ -215,6 +221,33 @@ namespace YABA.Service
         {
             int.TryParse(_httpContextAccessor.HttpContext.User.Identity.GetUserId(), out int userId);
             return userId;
+        }
+
+        private void UpdateBookmarkWithMetaData(IBookmark bookmark)
+        {
+            var webClient = new WebClient();
+            var sourceData = webClient.DownloadString(bookmark.Url);
+            var title = Regex.Match(sourceData, @"\<title\b[^>]*\>\s*(?<Title>[\s\S]*?)\</title\>", RegexOptions.IgnoreCase).Groups["Title"].Value;
+            var description = string.Empty;
+
+            var getHtmlDoc = new HtmlWeb();
+            var document = getHtmlDoc.Load(bookmark.Url);
+            var metaTags = document.DocumentNode.SelectNodes("//meta");
+            if (metaTags != null)
+            {
+                foreach (var sitetag in metaTags)
+                {
+                    if (sitetag.Attributes["name"] != null && sitetag.Attributes["content"] != null && sitetag.Attributes["name"].Value == "description")
+
+                    {
+
+                        description = sitetag.Attributes["content"].Value;
+                    }
+                }
+            }
+
+            bookmark.Title = !string.IsNullOrEmpty(bookmark.Title) ? bookmark.Title : string.IsNullOrEmpty(title) ? bookmark.Url : title;
+            bookmark.Description = !string.IsNullOrEmpty(bookmark.Description) ? bookmark.Description : description;
         }
     }
 }

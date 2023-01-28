@@ -11,11 +11,10 @@ namespace YABA.Common.DTOs.Bookmarks
         public DateTimeOffset CreatedOn { get; set; }
         public DateTimeOffset LastModified { get; set; }
         public string Title { get; set; }
-        public string Description { get; set; }
-        public string Note { get; set; }
+        public string? Description { get; set; }
+        public string? Note { get; set; }
         public bool IsHidden { get; set; }
         public string Url { get; set; }
         public IList<TagSummaryDTO> Tags { get; set; } = new List<TagSummaryDTO>();
-
     }
 }

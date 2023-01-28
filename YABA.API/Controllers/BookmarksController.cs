@@ -25,6 +25,8 @@ namespace YABA.API.Controllers
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> Create([FromBody] CreateBookmarkRequestDTO request) 
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             var result = await _bookmarkService.CreateBookmark(request);
 
             if(!result.IsSuccessful) return BadRequest();
@@ -103,12 +105,12 @@ namespace YABA.API.Controllers
             return Ok(new GenericResponse<int>(result));
         }
 
-        [HttpDelete()]
+        [HttpDelete]
         [ProducesResponseType(typeof(IEnumerable<GenericResponse<int>>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> DeleteBookmarks(IEnumerable<int> ids) 
+        public async Task<IActionResult> DeleteBookmarks([FromBody] DeleteBookmarksRequest request) 
         { 
-            var result = await _bookmarkService.DeleteBookmarks(ids);
+            var result = await _bookmarkService.DeleteBookmarks(request.Ids);
 
             if(result.All(x => !x.IsSuccessful)) return NotFound();
 
