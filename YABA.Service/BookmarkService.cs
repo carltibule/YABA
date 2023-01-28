@@ -32,6 +32,7 @@ namespace YABA.Service
         {
             _roContext = roContext;
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
             _mapper = mapper;
         }
 
@@ -106,8 +107,6 @@ namespace YABA.Service
             var crudResult = new CrudResultDTO<UpdateBookmarkRequestDTO>() { Entry = request, CrudResult = CrudResultLookup.UpdateFailed };
             var currentUserId = GetCurrentUserId();
 
-            if (!_roContext.Users.UserExists(currentUserId)) return crudResult;
-
             var bookmark = _context.Bookmarks.FirstOrDefault(x => x.UserId == currentUserId && x.Id == id);
 
             if(bookmark == null) return crudResult;
@@ -116,7 +115,6 @@ namespace YABA.Service
             bookmark.Description = request.Description;
             bookmark.Note = request.Note;
             bookmark.IsHidden = request.IsHidden;
-            bookmark.Url = request.Url;
 
             if (await _context.SaveChangesAsync() > 0) crudResult.CrudResult = CrudResultLookup.UpdateSucceeded;
 

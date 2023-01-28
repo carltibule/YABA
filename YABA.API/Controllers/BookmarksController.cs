@@ -23,7 +23,7 @@ namespace YABA.API.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(GenericResponse<CreateBookmarkRequestDTO>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> Create(CreateBookmarkRequestDTO request) 
+        public async Task<IActionResult> Create([FromBody] CreateBookmarkRequestDTO request) 
         {
             var result = await _bookmarkService.CreateBookmark(request);
 
@@ -35,13 +35,26 @@ namespace YABA.API.Controllers
         [HttpPost("{id}/Tags")]
         [ProducesResponseType(typeof(IEnumerable<GenericResponse<string>>),(int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> UpdateBookmarkTags(int id, IEnumerable<string> tags)
+        public async Task<IActionResult> UpdateBookmarkTags(int id, [FromBody] IEnumerable<string> tags)
         {
             var result = await _bookmarkService.UpdateBookmarkTags(id, tags);
 
             if (result.All(x => !x.IsSuccessful)) return NotFound();
 
             return Ok(result.Select(x => new GenericResponse<string>(x)));
+        }
+
+        [HttpPut("{id}")]
+        [ProducesResponseType(typeof(GenericResponse<UpdateBookmarkRequestDTO>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        public async Task<IActionResult> UpdateBookmark(int id, [FromBody] UpdateBookmarkRequestDTO request)
+        {
+            // TODO: Add support for HTTP PATCH
+            var result = await _bookmarkService.UpdateBookmark(id, request);
+
+            if (!result.IsSuccessful) return NotFound();
+
+            return Ok(new GenericResponse<UpdateBookmarkRequestDTO>(result));
         }
 
         [HttpGet]
