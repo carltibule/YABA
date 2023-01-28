@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using YABA.API.ViewModels;
 using YABA.Common.DTOs;
+using YABA.Common.DTOs.Tags;
 
 namespace YABA.API.Settings
 {

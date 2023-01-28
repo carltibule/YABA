@@ -9,6 +9,7 @@ namespace YABA.Service.Configuration
         public static void AddServiceProjectDependencyInjectionConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IBookmarkService, BookmarkService>();
         }
     }
 }

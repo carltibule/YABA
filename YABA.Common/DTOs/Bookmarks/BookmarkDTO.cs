@@ -1,12 +1,11 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
+using YABA.Common.DTOs.Tags;
 using YABA.Common.Interfaces;
-using YABA.Models.Interfaces;
 
-namespace YABA.Models
+namespace YABA.Common.DTOs.Bookmarks
 {
-    public class Bookmark : IIdentifiable, IDateCreatedTrackable, IDateModifiedTrackable, IBookmark
+    public class BookmarkDTO : IBookmark
     {
         public int Id { get; set; }
         public DateTimeOffset CreatedOn { get; set; }
@@ -16,10 +15,7 @@ namespace YABA.Models
         public string Note { get; set; }
         public bool IsHidden { get; set; }
         public string Url { get; set; }
+        public IList<TagDTO> Tags { get; set; } = new List<TagDTO>();
 
-        [Required]
-        [ForeignKey(nameof(User))]
-        public int UserId { get; set; }
-        public virtual User User { get; set; }
     }
 }

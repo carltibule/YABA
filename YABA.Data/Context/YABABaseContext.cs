@@ -32,11 +32,14 @@ namespace YABA.Data.Context
                 });
 
             modelBuilder.Entity<BookmarkTag>()
-                .HasIndex(x => new { x.BookmarkId, x.TagId })
-                .IsUnique();
+                .HasKey(x => new { x.BookmarkId, x.TagId });
 
             modelBuilder.Entity<User>()
                 .HasIndex(x => x.Auth0Id)
+                .IsUnique();
+
+            modelBuilder.Entity<Tag>()
+                .HasIndex(x => x.Name)
                 .IsUnique();
         }
 

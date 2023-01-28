@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using YABA.Data.Context;
@@ -9,9 +10,10 @@ using YABA.Data.Context;
 namespace YABA.Data.Migrations
 {
     [DbContext(typeof(YABABaseContext))]
-    partial class YABABaseContextModelSnapshot : ModelSnapshot
+    [Migration("20230126050046_AddedUrlToBookmark")]
+    partial class AddedUrlToBookmark
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,6 +37,10 @@ namespace YABA.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("boolean")
@@ -74,6 +80,12 @@ namespace YABA.Data.Migrations
 
             modelBuilder.Entity("YABA.Models.BookmarkTag", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
                     b.Property<int>("BookmarkId")
                         .HasColumnType("integer")
                         .HasColumnName("bookmark_id");
@@ -82,11 +94,15 @@ namespace YABA.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("tag_id");
 
-                    b.HasKey("BookmarkId", "TagId")
+                    b.HasKey("Id")
                         .HasName("pk_bookmark_tags");
 
                     b.HasIndex("TagId")
                         .HasDatabaseName("ix_bookmark_tags_tag_id");
+
+                    b.HasIndex("BookmarkId", "TagId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_bookmark_tags_bookmark_id_tag_id");
 
                     b.ToTable("bookmark_tags");
                 });
@@ -98,6 +114,10 @@ namespace YABA.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("id")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsHidden")
                         .HasColumnType("boolean")
@@ -114,10 +134,6 @@ namespace YABA.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_tags");
-
-                    b.HasIndex("Name")
-                        .IsUnique()
-                        .HasDatabaseName("ix_tags_name");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_tags_user_id");

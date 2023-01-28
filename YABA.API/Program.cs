@@ -43,7 +43,8 @@ builder.Services.AddApiVersioning(setup =>
     setup.ApiVersionReader = new UrlSegmentApiVersionReader();
 });
 
-// Add services to the container.
+// Add services to the container
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddServiceProjectDependencyInjectionConfiguration(configuration);
 builder.Services.AddDataProjectDependencyInjectionConfiguration(configuration);
 builder.Services.AddControllers().AddNewtonsoftJson();

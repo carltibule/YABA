@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\YABA.Common\YABA.Common.csproj" />
     <ProjectReference Include="..\YABA.Models\YABA.Models.csproj" />
   </ItemGroup>
 

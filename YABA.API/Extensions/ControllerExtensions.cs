@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using YABA.Common.Extensions;
 using YABA.Common.Lookups;
 
 namespace YABA.API.Extensions

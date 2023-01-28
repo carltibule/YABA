@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using YABA.Common.Attributes;
@@ -8,6 +9,13 @@ namespace YABA.Common.Extensions
 {
     public static class EnumExtensions
     {
+        private static readonly IEnumerable<CrudResultLookup> SuccessfulCrudStatuses = new List<CrudResultLookup>() {
+            CrudResultLookup.CreateSucceeded,
+            CrudResultLookup.UpdateSucceeded,
+            CrudResultLookup.DeleteSucceeded,
+            CrudResultLookup.RetrieveSuccessful
+        };
+
         public static TAttribute GetAttribute<TAttribute>(this Enum value) where TAttribute : Attribute
         {
             var enumType = value.GetType();
@@ -25,5 +33,8 @@ namespace YABA.Common.Extensions
             return claimLookup.GetAttribute<ClaimNameAttribute>().Name;
         }
 
+        public static bool IsCrudResultSuccessful(this CrudResultLookup importStatusLookup) => SuccessfulCrudStatuses.Contains(importStatusLookup);
+
+        public static bool IsCrudResultFailure(this CrudResultLookup importStatusLookup) => !SuccessfulCrudStatuses.Contains(importStatusLookup);
     }
 }

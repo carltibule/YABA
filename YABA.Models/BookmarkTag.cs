@@ -1,13 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using YABA.Models.Interfaces;
 
 namespace YABA.Models
 {
-    public class BookmarkTag : IIdentifiable
+    public class BookmarkTag
     {
-        public int Id { get; set; }
-
         [Required]
         [ForeignKey(nameof(Bookmark))]
         public int BookmarkId { get; set; }
