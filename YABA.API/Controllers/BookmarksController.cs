@@ -29,7 +29,7 @@ namespace YABA.API.Controllers
 
             var result = await _bookmarkService.CreateBookmark(request);
 
-            if(!result.IsSuccessful) return BadRequest();
+            if(!result.IsSuccessful) return BadRequest(new GenericResponse<CreateBookmarkRequestDTO>(result));
 
             return Ok(new GenericResponse<CreateBookmarkRequestDTO>(result));
         }
