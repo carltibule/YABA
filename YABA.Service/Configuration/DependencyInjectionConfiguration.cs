@@ -10,6 +10,8 @@ namespace YABA.Service.Configuration
         {
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IBookmarkService, BookmarkService>();
+            services.AddScoped<IMiscService, MiscService>();
+            services.AddScoped<ITagsService, TagsService>();
         }
     }
 }

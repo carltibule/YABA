@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using YABA.API.Extensions;
@@ -9,8 +8,10 @@ using YABA.Service.Interfaces;
 
 namespace YABA.API.Controllers
 {
+    [ApiController]
     [ApiVersion("1")]
-    [Authorize, Route("api/v{version:apiVersion}/[controller]")]
+    [Authorize]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class UsersController : ControllerBase
     {
         private readonly IMapper _mapper;

@@ -7,12 +7,10 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using YABA.Common.DTOs;
 using YABA.Common.DTOs.Bookmarks;
 using YABA.Common.DTOs.Tags;
 using YABA.Common.Extensions;
 using YABA.Common.Interfaces;
-using YABA.Common.Lookups;
 using YABA.Data.Context;
 using YABA.Data.Extensions;
 using YABA.Models;
@@ -39,11 +37,11 @@ namespace YABA.Service
             _mapper = mapper;
         }
 
-        public IEnumerable<BookmarkDTO> GetAll()
+        public IEnumerable<BookmarkDTO> GetAll(bool isHidden = false)
         {
             var currentUserId = GetCurrentUserId();
 
-            var userBookmarks = _roContext.Bookmarks.Where(x => x.UserId == currentUserId).ToDictionary(k => k.Id, v => v);
+            var userBookmarks = _roContext.Bookmarks.Where(x => x.UserId == currentUserId && x.IsHidden == isHidden).ToDictionary(k => k.Id, v => v);
             var bookmarkTagsLookup = _roContext.BookmarkTags
                     .Include(x => x.Tag)
                     .Where(x => userBookmarks.Keys.Contains(x.BookmarkId))
@@ -86,7 +84,14 @@ namespace YABA.Service
 
             var newEntity = await _context.Bookmarks.AddAsync(bookmark);
 
-            if (await _context.SaveChangesAsync() > 0) return _mapper.Map<BookmarkDTO>(newEntity.Entity);
+            if (await _context.SaveChangesAsync() > 0)
+            {
+                var bookmarkDTO = _mapper.Map<BookmarkDTO>(newEntity.Entity);
+
+                if(request.Tags != null && request.Tags.Any())
+                    bookmarkDTO.Tags.AddRange(await UpdateBookmarkTags(bookmarkDTO.Id, request.Tags));
+                return bookmarkDTO;
+            }
 
             return null;
         }
@@ -96,8 +101,13 @@ namespace YABA.Service
             var currentUserId = GetCurrentUserId();
 
             var bookmark = _context.Bookmarks.FirstOrDefault(x => x.UserId == currentUserId && x.Id == id);
+            var tags = new List<TagSummaryDTO>();
 
-            if(bookmark == null) return null;
+            if (request.Tags != null && request.Tags.Any())
+                tags = (await UpdateBookmarkTags(id, request.Tags)).ToList();
+
+
+            if (bookmark == null) return null;
 
             bookmark.Title = !string.IsNullOrEmpty(request.Title) ? request.Title : bookmark.Title;
             bookmark.Description = !string.IsNullOrEmpty(request.Description) ? request.Description : bookmark.Description;
@@ -106,7 +116,12 @@ namespace YABA.Service
             bookmark.Url = !string.IsNullOrEmpty(request.Url) ? request.Url : bookmark.Url;
             UpdateBookmarkWithMetaData(bookmark);
 
-            if (await _context.SaveChangesAsync() > 0) return _mapper.Map<BookmarkDTO>(bookmark);
+            if (await _context.SaveChangesAsync() > 0)
+            {
+                var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark);
+                bookmarkDTO.Tags = tags;
+                return bookmarkDTO;
+            }
 
             return null;
         }
@@ -115,7 +130,8 @@ namespace YABA.Service
         {
             var currentUserId = GetCurrentUserId();
 
-            if (!_roContext.Bookmarks.Any(x => x.Id == id && x.UserId == currentUserId)) return null;
+            if (!_roContext.Bookmarks.Any(x => x.Id == id && x.UserId == currentUserId)
+                 || tags == null || !tags.Any()) return null;
 
             // Add tags that are not yet in the database
             var savedUserTags = _context.Tags.Where(x => x.UserId == currentUserId).ToList();
@@ -167,7 +183,7 @@ namespace YABA.Service
                 .ToList();
 
             var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark);
-            bookmarkDTO.Tags = _mapper.Map<IList<TagSummaryDTO>>(bookmarkTags);
+            bookmarkDTO.Tags = _mapper.Map<List<TagSummaryDTO>>(bookmarkTags);
 
             return bookmarkDTO;
         }
@@ -199,12 +215,25 @@ namespace YABA.Service
             if (!await _roContext.Users.UserExistsAsync(currentUserId)) return null;
 
             var entriesToDelete = _context.Bookmarks.Where(x => x.UserId == currentUserId && ids.Contains(x.Id)).ToList();
-            var entryIdsToDelete = entriesToDelete.Select(x => x.Id);
             _context.Bookmarks.RemoveRange(entriesToDelete);
 
             if (await _context.SaveChangesAsync() <= 0) return null;
 
-            return ids;
+            return entriesToDelete.Select(x => x.Id);
+        }
+
+        public async Task<IEnumerable<int>?> HideBookmarks(IEnumerable<int> ids)
+        {
+            var currentUserId = GetCurrentUserId();
+
+            if (!await _roContext.Users.UserExistsAsync(currentUserId)) return null;
+
+            var entriesToHide = _context.Bookmarks.Where(x => x.UserId == currentUserId && ids.Contains(x.Id)).ToList();
+            entriesToHide.ForEach((x) => { x.IsHidden = !x.IsHidden; });
+
+            if(await _context.SaveChangesAsync() <= 0) return null;
+
+            return entriesToHide.Select(x => x.Id);
         }
 
         private int GetCurrentUserId()

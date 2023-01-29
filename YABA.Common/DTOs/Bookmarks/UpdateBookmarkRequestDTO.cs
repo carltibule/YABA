@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using YABA.Common.Interfaces;
 
 namespace YABA.Common.DTOs.Bookmarks
@@ -10,5 +11,6 @@ namespace YABA.Common.DTOs.Bookmarks
         public string? Note { get; set; }
         public bool IsHidden { get; set; }
         public string? Url { get; set; }
+        public IEnumerable<string>? Tags { get; set; }
     }
 }

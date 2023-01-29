@@ -15,6 +15,9 @@ namespace YABA.API.Settings
             CreateMap<UserDTO, UserResponse>();
             CreateMap<TagSummaryDTO, TagResponse>();
             CreateMap<BookmarkDTO, BookmarkResponse>();
+            CreateMap<WebsiteMetaDataDTO, GetWebsiteMetaDataResponse>();
+            CreateMap<BookmarkDTO, PatchBookmarkRequest>();
+            CreateMap<PatchBookmarkRequest, UpdateBookmarkRequestDTO>();
         }
     }
 }
