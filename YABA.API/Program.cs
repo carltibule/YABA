@@ -103,4 +103,12 @@ app.MapControllers();
 // Add custom middlewares
 app.UseMiddleware<AddCustomClaimsMiddleware>();
 
+app.UseCors(x => x
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
+
+var webClientUrl = configuration.GetSection("WebClient").GetValue<string>("Url");
+app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().WithOrigins(webClientUrl));
+
 app.Run();
