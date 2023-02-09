@@ -9,8 +9,6 @@ namespace YABA.Common.DTOs.Bookmarks
         public string? Description { get; set; }
         public string? Note { get; set; }
         public bool IsHidden { get; set; }
-
-        [Required]
-        public string Url { get; set; }
+        public string? Url { get; set; }
     }
 }

@@ -39,7 +39,7 @@ namespace YABA.Service
             _mapper = mapper;
         }
 
-        public CrudResultDTO<IEnumerable<BookmarkDTO>> GetAll()
+        public IEnumerable<BookmarkDTO> GetAll()
         {
             var currentUserId = GetCurrentUserId();
 
@@ -70,60 +70,52 @@ namespace YABA.Service
                 userBookmarkDTOs.Add(bookmarkDTO);
             }
 
-            return new CrudResultDTO<IEnumerable<BookmarkDTO>> { Entry = userBookmarkDTOs, CrudResult = CrudResultLookup.RetrieveSuccessful };
+            return userBookmarkDTOs;
         }
 
-        public async Task<CrudResultDTO<CreateBookmarkRequestDTO>?> CreateBookmark(CreateBookmarkRequestDTO request)
+        public async Task<BookmarkDTO?> CreateBookmark(CreateBookmarkRequestDTO request)
         {
-            var crudResult = new CrudResultDTO<CreateBookmarkRequestDTO>() { Entry = request, CrudResult = CrudResultLookup.CreateFailed };
             var currentUserId = GetCurrentUserId();
 
-            if (!_roContext.Users.UserExists(currentUserId)) return crudResult;
-
-            if(await _roContext.Bookmarks.AnyAsync(x => x.UserId == currentUserId && x.Url == request.Url))
-            {
-                crudResult.CrudResult = CrudResultLookup.CreateFailedEntryExists;
-                return crudResult;
-            }
+            if (!_roContext.Users.UserExists(currentUserId)
+                || await _roContext.Bookmarks.AnyAsync(x => x.UserId == currentUserId && x.Url == request.Url)) return null;
 
             var bookmark = _mapper.Map<Bookmark>(request);
             UpdateBookmarkWithMetaData(bookmark);
             bookmark.UserId = currentUserId;
 
-            await _context.Bookmarks.AddAsync(bookmark);
+            var newEntity = await _context.Bookmarks.AddAsync(bookmark);
 
-            if (await _context.SaveChangesAsync() > 0) crudResult.CrudResult = CrudResultLookup.CreateSucceeded;
+            if (await _context.SaveChangesAsync() > 0) return _mapper.Map<BookmarkDTO>(newEntity.Entity);
 
-            return crudResult;
+            return null;
         }
 
-        public async Task<CrudResultDTO<UpdateBookmarkRequestDTO>> UpdateBookmark(int id, UpdateBookmarkRequestDTO request)
+        public async Task<BookmarkDTO?> UpdateBookmark(int id, UpdateBookmarkRequestDTO request)
         {
-            var crudResult = new CrudResultDTO<UpdateBookmarkRequestDTO>() { Entry = request, CrudResult = CrudResultLookup.UpdateFailed };
             var currentUserId = GetCurrentUserId();
 
             var bookmark = _context.Bookmarks.FirstOrDefault(x => x.UserId == currentUserId && x.Id == id);
 
-            if(bookmark == null) return crudResult;
+            if(bookmark == null) return null;
 
-            bookmark.Title = request.Title;
-            bookmark.Description = request.Description;
-            bookmark.Note = request.Note;
+            bookmark.Title = !string.IsNullOrEmpty(request.Title) ? request.Title : bookmark.Title;
+            bookmark.Description = !string.IsNullOrEmpty(request.Description) ? request.Description : bookmark.Description;
+            bookmark.Note = !string.IsNullOrEmpty(request.Note) ? request.Note : bookmark.Note;
             bookmark.IsHidden = request.IsHidden;
-            bookmark.Url = request.Url;
+            bookmark.Url = !string.IsNullOrEmpty(request.Url) ? request.Url : bookmark.Url;
             UpdateBookmarkWithMetaData(bookmark);
 
-            if (await _context.SaveChangesAsync() > 0) crudResult.CrudResult = CrudResultLookup.UpdateSucceeded;
+            if (await _context.SaveChangesAsync() > 0) return _mapper.Map<BookmarkDTO>(bookmark);
 
-            return crudResult;
+            return null;
         }
 
-        public async Task<IEnumerable<CrudResultDTO<string>>> UpdateBookmarkTags(int id, IEnumerable<string> tags)
+        public async Task<IEnumerable<TagSummaryDTO>?> UpdateBookmarkTags(int id, IEnumerable<string> tags)
         {
-            var crudResults = tags.Select((x) => new CrudResultDTO<string> { Entry = x, CrudResult = CrudResultLookup.UpdateFailed }).ToList();
             var currentUserId = GetCurrentUserId();
 
-            if (!_roContext.Bookmarks.Any(x => x.Id == id && x.UserId == currentUserId)) return crudResults;
+            if (!_roContext.Bookmarks.Any(x => x.Id == id && x.UserId == currentUserId)) return null;
 
             // Add tags that are not yet in the database
             var savedUserTags = _context.Tags.Where(x => x.UserId == currentUserId).ToList();
@@ -148,17 +140,25 @@ namespace YABA.Service
             _context.BookmarkTags.RemoveRange(bookmarkTagsToRemove);
             await _context.BookmarkTags.AddRangeAsync(bookmarkTagsToAdd);
 
-            if (await _context.SaveChangesAsync() >= 0) crudResults.ForEach(x => x.CrudResult = CrudResultLookup.UpdateSucceeded);
+            if (await _context.SaveChangesAsync() >= 0)
+            {
+                var updatedBookmarkTags = _roContext.BookmarkTags
+                    .Include(x => x.Tag)
+                    .Where(x => x.BookmarkId == id)
+                    .Select(x => x.Tag);
 
-            return crudResults;
+                return _mapper.Map<IEnumerable<TagSummaryDTO>>(updatedBookmarkTags);
+            }
+
+            return null;
         }
 
-        public async Task<CrudResultDTO<BookmarkDTO>> Get(int id)
+        public async Task<BookmarkDTO?> Get(int id)
         {
             int.TryParse(_httpContextAccessor.HttpContext.User.Identity.GetUserId(), out int userId);
             var bookmark = await _roContext.Bookmarks.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
-            if (bookmark == null) return new CrudResultDTO<BookmarkDTO> { CrudResult = CrudResultLookup.RetrieveFailed, Entry = null };
+            if (bookmark == null) return null;
 
             var bookmarkTags = _roContext.BookmarkTags
                 .Include(x => x.Tag)
@@ -169,13 +169,13 @@ namespace YABA.Service
             var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark);
             bookmarkDTO.Tags = _mapper.Map<IList<TagSummaryDTO>>(bookmarkTags);
 
-            return new CrudResultDTO<BookmarkDTO> { CrudResult = CrudResultLookup.RetrieveSuccessful, Entry = bookmarkDTO };
+            return bookmarkDTO;
         }
 
-        public CrudResultDTO<IEnumerable<TagSummaryDTO>> GetBookmarkTags(int id)
+        public IEnumerable<TagSummaryDTO>? GetBookmarkTags(int id)
         {
             int.TryParse(_httpContextAccessor.HttpContext.User.Identity.GetUserId(), out int userId);
-            if (!_roContext.Bookmarks.Any(x => x.Id == id && x.UserId == userId)) return new CrudResultDTO<IEnumerable<TagSummaryDTO>> { Entry = null, CrudResult = CrudResultLookup.RetrieveFailed };
+            if (!_roContext.Bookmarks.Any(x => x.Id == id && x.UserId == userId)) return null;
 
             var bookmarkTags = _roContext.BookmarkTags
                 .Include(x => x.Tag)
@@ -183,38 +183,28 @@ namespace YABA.Service
                 .Select(x => x.Tag)
                 .ToList();
 
-            var bookmarkTagDTOs = _mapper.Map<IEnumerable<TagSummaryDTO>>(bookmarkTags);
-
-            return new CrudResultDTO<IEnumerable<TagSummaryDTO>> { Entry = bookmarkTagDTOs, CrudResult = CrudResultLookup.RetrieveSuccessful };
+            return _mapper.Map<IEnumerable<TagSummaryDTO>>(bookmarkTags);
         }
 
-        public async Task<CrudResultDTO<int>> DeleteBookmark(int id)
+        public async Task<int?> DeleteBookmark(int id)
         {
-            var crudResults = await DeleteBookmarks(new List<int> { id });
-            return crudResults.FirstOrDefault();
+            var result = await DeleteBookmarks(new List<int> { id });
+            return result.FirstOrDefault();
         }
 
-        public async Task<IEnumerable<CrudResultDTO<int>>> DeleteBookmarks(IEnumerable<int> ids)
+        public async Task<IEnumerable<int>?> DeleteBookmarks(IEnumerable<int> ids)
         {
-            var crudResults = ids.Select(x => new CrudResultDTO<int> { Entry = x, CrudResult = CrudResultLookup.DeleteFailed }).ToList();
             var currentUserId = GetCurrentUserId();
 
-            if (!await _roContext.Users.UserExistsAsync(currentUserId)) return crudResults;
+            if (!await _roContext.Users.UserExistsAsync(currentUserId)) return null;
 
             var entriesToDelete = _context.Bookmarks.Where(x => x.UserId == currentUserId && ids.Contains(x.Id)).ToList();
             var entryIdsToDelete = entriesToDelete.Select(x => x.Id);
             _context.Bookmarks.RemoveRange(entriesToDelete);
 
-            if (await _context.SaveChangesAsync() <= 0) return crudResults;
+            if (await _context.SaveChangesAsync() <= 0) return null;
 
-            // Update crudResults that were found in the entriesToDelete to success
-            foreach(var crudResult in crudResults)
-            {
-                if (entryIdsToDelete.Contains(crudResult.Entry))
-                    crudResult.CrudResult = CrudResultLookup.DeleteSucceeded;
-            }
-
-            return crudResults;
+            return ids;
         }
 
         private int GetCurrentUserId()

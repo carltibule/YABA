@@ -8,14 +8,14 @@ namespace YABA.Service.Interfaces
 {
     public interface IBookmarkService
     {
-        Task<CrudResultDTO<CreateBookmarkRequestDTO>> CreateBookmark(CreateBookmarkRequestDTO request);
-        Task<CrudResultDTO<UpdateBookmarkRequestDTO>> UpdateBookmark(int id, UpdateBookmarkRequestDTO request);
-        Task<IEnumerable<CrudResultDTO<string>>> UpdateBookmarkTags(int id, IEnumerable<string> tags);
-        CrudResultDTO<IEnumerable<BookmarkDTO>> GetAll();
-        Task<CrudResultDTO<BookmarkDTO>> Get(int id);
-        CrudResultDTO<IEnumerable<TagSummaryDTO>> GetBookmarkTags(int id);
-        Task<CrudResultDTO<int>> DeleteBookmark(int id);
-        Task<IEnumerable<CrudResultDTO<int>>> DeleteBookmarks(IEnumerable<int> ids);
+        Task<BookmarkDTO?> CreateBookmark(CreateBookmarkRequestDTO request);
+        Task<BookmarkDTO?> UpdateBookmark(int id, UpdateBookmarkRequestDTO request);
+        Task<IEnumerable<TagSummaryDTO>?> UpdateBookmarkTags(int id, IEnumerable<string> tags);
+        IEnumerable<BookmarkDTO> GetAll();
+        Task<BookmarkDTO?> Get(int id);
+        IEnumerable<TagSummaryDTO>? GetBookmarkTags(int id);
+        Task<int?> DeleteBookmark(int id);
+        Task<IEnumerable<int>?> DeleteBookmarks(IEnumerable<int> ids);
         
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace YABA.API.ViewModels
+﻿namespace YABA.API.ViewModels.Bookmarks
 {
     public class UpdateBookmarkTagRequest
     {
