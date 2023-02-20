@@ -5,6 +5,7 @@ import { BookmarksListView } from "./bookmarksListView";
 import { BookmarkDetailView } from "./bookmarkDetailView";
 import { TestView } from "./testView";
 import { NotFoundView } from "./notFoundView";
+import { TagsView } from "./tagsView";
 
 export {
     BaseLayout,
@@ -13,5 +14,6 @@ export {
     BookmarksListView,
     BookmarkDetailView,
     TestView,
-    NotFoundView
-}
+    NotFoundView,
+    TagsView,
+};

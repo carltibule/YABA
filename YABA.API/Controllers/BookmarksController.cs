@@ -39,20 +39,6 @@ namespace YABA.API.Controllers
             return CreatedAtAction(nameof(Create), _mapper.Map<BookmarkResponse>(result));
         }
 
-        [HttpPost("{id}/Tags")]
-        [ProducesResponseType(typeof(IEnumerable<TagResponse>),(int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<IActionResult> UpdateBookmarkTags(int id, [FromBody] UpdateBookmarkTagRequest request)
-        {
-            if (request.Tags == null || !request.Tags.Any()) return BadRequest();
-
-            var result = await _bookmarkService.UpdateBookmarkTags(id, request.Tags);
-
-            if (result == null) return NotFound();
-
-            return Ok(_mapper.Map<IEnumerable<TagResponse>>(result));
-        }
-
         [HttpPut("{id}")]
         [ProducesResponseType(typeof(BookmarkResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -106,18 +92,6 @@ namespace YABA.API.Controllers
             return Ok(_mapper.Map<BookmarkResponse>(result));
         }
 
-        [HttpGet("{id}/Tags")]
-        [ProducesResponseType(typeof(IEnumerable<TagResponse>), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public IActionResult GetBookmarkTags(int id) 
-        { 
-            var result = _bookmarkService.GetBookmarkTags(id);
-
-            if (result == null) return NotFound();
-
-            return Ok(_mapper.Map<IEnumerable<TagResponse>>(result));
-        }
-
         [HttpDelete("{id}")]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -158,6 +132,14 @@ namespace YABA.API.Controllers
             if (result == null) return NotFound();
 
             return NoContent();
+        }
+
+        [HttpGet("Tags")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        public IActionResult GetBookmarkTags(bool showHidden = false)
+        {
+            var result = _bookmarkService.GetAllBookmarkTags(showHidden);
+            return Ok(_mapper.Map<IEnumerable<TagResponse>>(result));
         }
 
     }

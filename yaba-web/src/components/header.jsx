@@ -57,6 +57,7 @@ export function Header(props) {
                                     <NavDropdown.Divider />
                                     <NavDropdown.Item href="/bookmarks/new">New</NavDropdown.Item>
                                 </NavDropdown>
+                                <Nav.Link href="/tags">Tags</Nav.Link>
                                 <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
                             </>
                         )}

@@ -60,7 +60,7 @@ namespace YABA.Service
                 {
                     foreach (var bookmarkTag in bookmarkTags)
                     {
-                        var tagDTO = _mapper.Map<TagSummaryDTO>(bookmarkTag.Tag);
+                        var tagDTO = _mapper.Map<TagDTO>(bookmarkTag.Tag);
                         bookmarkDTO.Tags.Add(tagDTO);
                     }
                 }
@@ -101,7 +101,7 @@ namespace YABA.Service
             var currentUserId = GetCurrentUserId();
 
             var bookmark = _context.Bookmarks.FirstOrDefault(x => x.UserId == currentUserId && x.Id == id);
-            var tags = new List<TagSummaryDTO>();
+            var tags = new List<TagDTO>();
 
             if (request.Tags != null && request.Tags.Any())
                 tags = (await UpdateBookmarkTags(id, request.Tags)).ToList();
@@ -126,7 +126,7 @@ namespace YABA.Service
             return null;
         }
 
-        public async Task<IEnumerable<TagSummaryDTO>?> UpdateBookmarkTags(int id, IEnumerable<string> tags)
+        public async Task<IEnumerable<TagDTO>?> UpdateBookmarkTags(int id, IEnumerable<string> tags)
         {
             var currentUserId = GetCurrentUserId();
 
@@ -163,7 +163,7 @@ namespace YABA.Service
                     .Where(x => x.BookmarkId == id)
                     .Select(x => x.Tag);
 
-                return _mapper.Map<IEnumerable<TagSummaryDTO>>(updatedBookmarkTags);
+                return _mapper.Map<IEnumerable<TagDTO>>(updatedBookmarkTags);
             }
 
             return null;
@@ -183,12 +183,12 @@ namespace YABA.Service
                 .ToList();
 
             var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark);
-            bookmarkDTO.Tags = _mapper.Map<List<TagSummaryDTO>>(bookmarkTags);
+            bookmarkDTO.Tags = _mapper.Map<List<TagDTO>>(bookmarkTags);
 
             return bookmarkDTO;
         }
 
-        public IEnumerable<TagSummaryDTO>? GetBookmarkTags(int id)
+        public IEnumerable<TagDTO>? GetBookmarkTags(int id)
         {
             int.TryParse(_httpContextAccessor.HttpContext.User.Identity.GetUserId(), out int userId);
             if (!_roContext.Bookmarks.Any(x => x.Id == id && x.UserId == userId)) return null;
@@ -199,7 +199,7 @@ namespace YABA.Service
                 .Select(x => x.Tag)
                 .ToList();
 
-            return _mapper.Map<IEnumerable<TagSummaryDTO>>(bookmarkTags);
+            return _mapper.Map<IEnumerable<TagDTO>>(bookmarkTags);
         }
 
         public async Task<int?> DeleteBookmark(int id)
@@ -234,6 +234,20 @@ namespace YABA.Service
             if(await _context.SaveChangesAsync() <= 0) return null;
 
             return entriesToHide.Select(x => x.Id);
+        }
+
+        public IEnumerable<TagDTO> GetAllBookmarkTags(bool showHidden = false)
+        {
+            var currentUserId = GetCurrentUserId();
+
+            var activeUserTags = _roContext.BookmarkTags
+                .Include(x => x.Tag)
+                .Where(x => x.Tag.UserId == currentUserId && x.Tag.IsHidden == showHidden)
+                .ToList()
+                .GroupBy(x => x.Tag.Id)
+                .Select(g => g.First()?.Tag);
+
+            return _mapper.Map<IEnumerable<TagDTO>>(activeUserTags);
         }
 
         private int GetCurrentUserId()

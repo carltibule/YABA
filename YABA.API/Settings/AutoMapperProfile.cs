@@ -13,11 +13,11 @@ namespace YABA.API.Settings
         public AutoMapperProfile()
         {
             CreateMap<UserDTO, UserResponse>();
-            CreateMap<TagSummaryDTO, TagResponse>();
             CreateMap<BookmarkDTO, BookmarkResponse>();
             CreateMap<WebsiteMetaDataDTO, GetWebsiteMetaDataResponse>();
             CreateMap<BookmarkDTO, PatchBookmarkRequest>();
             CreateMap<PatchBookmarkRequest, UpdateBookmarkRequestDTO>();
+            CreateMap<TagDTO, TagResponse>().ReverseMap();
         }
     }
 }

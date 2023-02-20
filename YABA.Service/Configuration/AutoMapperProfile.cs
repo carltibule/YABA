@@ -15,7 +15,8 @@ namespace YABA.Service.Configuration
             CreateMap<Bookmark, BookmarkDTO>();
             CreateMap<CreateBookmarkRequestDTO, Bookmark>();
             CreateMap<Tag, TagDTO>();
-            CreateMap<Tag, TagSummaryDTO>();
+            CreateMap<CreateTagDTO, Tag>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name.ToLowerInvariant()));
         }
     }
 }

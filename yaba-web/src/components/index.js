@@ -5,6 +5,8 @@ import { Auth0ProviderWithNavigate } from "./auth0ProviderWithNavigate";
 import { ProtectedRoute } from "./protectedRoute";
 import { SplashScreen } from "./shared/splashScreen";
 import { SearchForm } from "./shared/searchForm";
+import { UpsertTagModal } from "./tags/upsertTagModal";
+import { InterceptModal } from "./shared/interceptModal";
 
 export {
     Footer,
@@ -13,5 +15,7 @@ export {
     Auth0ProviderWithNavigate,
     ProtectedRoute,
     SplashScreen,
-    SearchForm
+    SearchForm,
+    UpsertTagModal,
+    InterceptModal,
 };
