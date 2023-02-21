@@ -14,4 +14,12 @@ export const getTagGroups = (allBookmarkTags) => {
         
         return accumulator
     }, []).sort((a, b) => (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0);
-}
+};
+
+export const flattenTagArrays = (allBookmarkTags) => allBookmarkTags.flat().reduce((accumulator, current) => {
+    if(!accumulator.find((item) => item.id === current.id)) {
+        accumulator.push(current);
+    }
+
+    return accumulator
+}, []);

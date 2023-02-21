@@ -37,35 +37,29 @@ namespace YABA.Service
             _mapper = mapper;
         }
 
-        public IEnumerable<BookmarkDTO> GetAll(bool isHidden = false)
+        public IEnumerable<BookmarkDTO> GetAll(bool showHidden = false)
         {
             var currentUserId = GetCurrentUserId();
 
-            var userBookmarks = _roContext.Bookmarks.Where(x => x.UserId == currentUserId && x.IsHidden == isHidden).ToDictionary(k => k.Id, v => v);
             var bookmarkTagsLookup = _roContext.BookmarkTags
-                    .Include(x => x.Tag)
-                    .Where(x => userBookmarks.Keys.Contains(x.BookmarkId))
-                    .ToList()
-                    .GroupBy(x => x.BookmarkId)
-                    .ToDictionary(k => k.Key, v => v.ToList());
-
+                .Include(x => x.Bookmark)
+                .Include(x => x.Tag)
+                .Where(x => x.Bookmark.UserId == currentUserId && x.Tag.UserId == currentUserId)
+                .ToList()
+                .GroupBy(x => x.BookmarkId)
+                .ToDictionary(k => k.Key, v => new KeyValuePair<Bookmark, List<Tag>>(v.FirstOrDefault()?.Bookmark, v.Select(x => x.Tag).ToList()));
             var userBookmarkDTOs = new List<BookmarkDTO>();
 
-            foreach(var bookmark in userBookmarks)
+            foreach (var bookmarkTag in bookmarkTagsLookup)
             {
-                var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark.Value);
-                bookmarkTagsLookup.TryGetValue(bookmark.Key, out var bookmarkTags);
-
-                if(bookmarkTags != null)
+                if ((showHidden && (bookmarkTag.Value.Key.IsHidden || bookmarkTag.Value.Value.Any(x => x.IsHidden))) // If showHidden = true, only add Bookmarks that are marked Hidden OR when any of its Tags are marked Hidden
+                    || (!showHidden && !bookmarkTag.Value.Key.IsHidden && bookmarkTag.Value.Value.All(x => !x.IsHidden))) // If showHidden = false, only add when Bookmark is not marked Hidden AND when any of its Tags are not marked as Hidden
                 {
-                    foreach (var bookmarkTag in bookmarkTags)
-                    {
-                        var tagDTO = _mapper.Map<TagDTO>(bookmarkTag.Tag);
-                        bookmarkDTO.Tags.Add(tagDTO);
-                    }
+                    var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmarkTag.Value.Key);
+                    var bookmarkTagDTOs = _mapper.Map<IEnumerable<TagDTO>>(bookmarkTag.Value.Value);
+                    bookmarkDTO.Tags.AddRange(bookmarkTagDTOs);
+                    userBookmarkDTOs.Add(bookmarkDTO);
                 }
-
-                userBookmarkDTOs.Add(bookmarkDTO);
             }
 
             return userBookmarkDTOs;

@@ -74,9 +74,9 @@ namespace YABA.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<BookmarkResponse>), (int)HttpStatusCode.OK)]
-        public IActionResult GetAll(bool isHidden = false) 
+        public IActionResult GetAll(bool showHidden = false) 
         {
-            var result = _bookmarkService.GetAll(isHidden);
+            var result = _bookmarkService.GetAll(showHidden);
             return Ok(_mapper.Map<IEnumerable<BookmarkResponse>>(result));
         }
 

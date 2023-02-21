@@ -2,9 +2,9 @@ import React, { useEffect, useReducer, useState } from "react";
 import { Alert, Col, Container, Row, Button, Modal } from "../components/external";
 import { Bookmark } from "../components";
 import { useAuth0 } from "@auth0/auth0-react";
-import { deleteBookmarks, getAllBookmarks, getAllTags, hideBookmarks } from "../api";
+import { deleteBookmarks, getAllBookmarks, hideBookmarks } from "../api";
 import { SplashScreen, SearchForm } from "../components";
-import { getTagGroups, isSubset, containsSubstring } from "../utils";
+import { getTagGroups, isSubset, containsSubstring, flattenTagArrays } from "../utils";
 
 export function BookmarksListView(props) {
     const { getAccessTokenSilently } = useAuth0();
@@ -65,34 +65,9 @@ export function BookmarksListView(props) {
                 });
         }
     };
-
     const [alertMessageState, dispatchAlertMessageState] = useReducer(alertReducer, alertMessageInitialState);
 
-    const tagsInitialState = [];
-
-    const tagsReducer = (state = tagsInitialState, action) => {
-        switch(action.type) {
-            case "SET":
-                return action.payload.tags.map(x => ({...x, isSelected: false }));
-            case "ADD_SELECTED":
-            case "REMOVE_SELECTED":
-                const modifiedTags = [...state];
-                const selectedTagIndex = modifiedTags.findIndex((x) => x.id === action.payload.selectedTagId);
-                modifiedTags[selectedTagIndex].isSelected = action.type === "ADD_SELECTED";
-                return modifiedTags;
-            default:
-                return state;
-        }
-    }
-
-    const [tagsState, dispatchTagsState] = useReducer(tagsReducer, tagsInitialState);
-    const onTagSelected = (isTagSelected, tag) => dispatchTagsState({type: isTagSelected ? "ADD_SELECTED" : "REMOVE_SELECTED", payload: {selectedTagId: tag.id}})
-    const getSelectedTags = () => tagsState.filter((x) => x.isSelected);
-    const getNotSelectedTags = () => tagsState.filter((x) => !x.isSelected);
-
-    const bookmarksInitialState = [];
-
-    const bookmarksReducer = (state = bookmarksInitialState, action) => {
+    const bookmarksReducer = (state = [], action) => {
         switch(action.type) {
             case "SET":
                 return action.payload.bookmarks.map(x => ({...x, isSelected: false, isDisplayed: true}));
@@ -122,7 +97,7 @@ export function BookmarksListView(props) {
         }
     };
 
-    const [bookmarksState, dispatchBookmarksState] = useReducer(bookmarksReducer, bookmarksInitialState);
+    const [bookmarksState, dispatchBookmarksState] = useReducer(bookmarksReducer, []);
     const onBookmarkSelected = (isBookmarkSelected, bookmark) => dispatchBookmarksState({type: isBookmarkSelected ?  "ADD_SELECTED" : "REMOVE_SELECTED", payload: {selectedBookmarkId: bookmark.id}});
     const getSelectedBookmarksCount = () => bookmarksState.filter((x) => x.isSelected).length;
     const getSelectedBookmarks = () => bookmarksState.filter((x) => x.isSelected);
@@ -205,17 +180,6 @@ export function BookmarksListView(props) {
         
     };
 
-    const fetchTags = async() => {
-        const accessToken = await getAccessTokenSilently();
-        const { data, error } = await getAllTags(accessToken);
-
-        if(error) {
-            dispatchAlertMessageState({type: "SHOW_ALERT", payload: {show: true, alertType: "danger", "message": `Error fetching tags: ${error.message}`}});
-        } else {
-            dispatchTagsState({type: "SET", payload: {tags: data}});
-        }
-    };
-
     const fetchBookmarks = async() => {
         const accessToken = await getAccessTokenSilently();
         const { data, error } = await getAllBookmarks(accessToken, props.showHidden);
@@ -224,13 +188,32 @@ export function BookmarksListView(props) {
             dispatchAlertMessageState({type: "SHOW_ALERT", payload: {show: true, alertType: "danger", "message": `Error fetching bookmarks: ${error.message}`}});
         } else {
             dispatchBookmarksState({type: "SET", payload: {bookmarks: data}});
+            dispatchTagsState({type: "SET"});
+        }
+    }
+
+    
+    const tagsReducer = (state = [], action) => {
+        switch(action.type) {
+            case "SET":
+                return flattenTagArrays(bookmarksState.map(x => x.tags)).map(x => Object.assign({}, x, {isSelected : false}));
+            case "ADD_SELECTED":
+            case "REMOVE_SELECTED":
+                const modifiedTags = [...state];
+                const selectedTagIndex = modifiedTags.findIndex((x) => x.id === action.payload.selectedTagId);
+                modifiedTags[selectedTagIndex].isSelected = action.type === "ADD_SELECTED";
+                return modifiedTags;
+            default:
+                return state;
         }
     }
     
-    useEffect(() => {
-        dispatchSplashScreenState({type: "SHOW_SPLASH_SCREEN", payload: {message: "Retrieving Tags..."}});
-        fetchTags();
+    const [tagsState, dispatchTagsState] = useReducer(tagsReducer, []);
+    const onTagSelected = (isTagSelected, tag) => dispatchTagsState({type: isTagSelected ? "ADD_SELECTED" : "REMOVE_SELECTED", payload: {selectedTagId: tag.id}})
+    const getSelectedTags = () => tagsState.filter((x) => x.isSelected);
+    const getNotSelectedTags = () => tagsState.filter((x) => !x.isSelected);
 
+    useEffect(() => {
         dispatchSplashScreenState({type: "SHOW_SPLASH_SCREEN", payload: {message: "Retrieving Bookmarks..."}});
         fetchBookmarks();
 
@@ -354,7 +337,7 @@ export function BookmarksListView(props) {
                                             <br />
                                             {
                                                 group.tags.map((tag) => {
-                                                    return <Button key={tag.id} variant="link" style={{textDecoration: "none"}} className="ms-0 me-2 p-0" onClick={() => onTagSelected(true, tag)}>
+                                                    return <Button key={tag.id} variant="link" style={{textDecoration: "none"}} className={`ms-0 me-2 p-0 ${tag.isHidden ? "text-danger" : null}`} onClick={() => onTagSelected(true, tag)}>
                                                             #{tag.name}
                                                         </Button>
                                                 })

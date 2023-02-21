@@ -2,9 +2,9 @@ import { callExternalApi } from "../apiHelper";
 
 const apiServerUrl = `${process.env.REACT_APP_API_BASE_URL}/v1/Bookmarks`;
 
-export const getAllBookmarks = async(accessToken, isHidden = false) => {
+export const getAllBookmarks = async(accessToken, showHidden = false) => {
     const config = {
-        url: `${apiServerUrl}?isHidden=${isHidden}`,
+        url: `${apiServerUrl}?showHidden=${showHidden}`,
         method: "GET",
         headers: {
             "content-type": "application/json",
