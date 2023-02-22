@@ -11,7 +11,7 @@ export function Header(props) {
     const handleLogin = async () => {
         await loginWithRedirect({
           appState: {
-            returnTo: "/bookmarks",
+            returnTo: "/",
           },
         });
       };
@@ -19,7 +19,7 @@ export function Header(props) {
     const handleSignUp = async () => {
         await loginWithRedirect({
           appState: {
-            returnTo: "/bookmarks",
+            returnTo: "/",
           },
           authorizationParams: {
             screen_hint: "signup",
