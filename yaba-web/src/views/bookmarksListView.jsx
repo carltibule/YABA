@@ -3,7 +3,7 @@ import { Alert, Col, Container, Row, Button, Modal, Dropdown, DropdownButton } f
 import { Bookmark } from "../components";
 import { useAuth0 } from "@auth0/auth0-react";
 import { deleteBookmarks, getAllBookmarks, hideBookmarks } from "../api";
-import { SplashScreen, SearchForm } from "../components";
+import { SplashScreen, SearchForm, Tag } from "../components";
 import { getTagGroups, isSubset, containsSubstring, flattenTagArrays } from "../utils";
 
 export function BookmarksListView(props) {
@@ -334,11 +334,7 @@ export function BookmarksListView(props) {
                                             <span key={group.name} className="text-primary fw-bold">{group.name}</span>
                                             <br />
                                             {
-                                                group.tags.map((tag) => {
-                                                    return <Button key={tag.id} variant="link" style={{textDecoration: "none"}} className={`ms-0 me-2 p-0 ${tag.isHidden ? "text-danger" : null}`} onClick={() => onTagSelected(true, tag)}>
-                                                            #{tag.name}
-                                                        </Button>
-                                                })
+                                                group.tags.map((tag) => <Tag key={tag.id} tag={tag} onClick={() => onTagSelected(true, tag)} />)
                                             }
                                         </div>
                                 })
