@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useState } from "react";
-import { Alert, Col, Container, Row, Button, Modal } from "../components/external";
+import { Alert, Col, Container, Row, Button, Modal, Dropdown, DropdownButton } from "../components/external";
 import { Bookmark } from "../components";
 import { useAuth0 } from "@auth0/auth0-react";
 import { deleteBookmarks, getAllBookmarks, hideBookmarks } from "../api";
@@ -9,24 +9,6 @@ import { getTagGroups, isSubset, containsSubstring, flattenTagArrays } from "../
 export function BookmarksListView(props) {
     const { getAccessTokenSilently } = useAuth0();
     const [searchString, setSearchString] = useState("");
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-
-        if(!searchString) {
-            dispatchBookmarksState({type: "DISPLAY_ALL"});  
-        } else {
-            dispatchBookmarksState({type: "SEARCH"});
-        }
-    };
-
-    const handleSearchStringChange = (e) => {
-        if(!e.target.value) {
-            dispatchBookmarksState({type: "DISPLAY_ALL"});
-        } else {
-            setSearchString(e.target.value);
-        }
-    };
     
     const initialSplashScreenState = { show: false, message: null };
     
@@ -67,7 +49,30 @@ export function BookmarksListView(props) {
     };
     const [alertMessageState, dispatchAlertMessageState] = useReducer(alertReducer, alertMessageInitialState);
 
-    const bookmarksReducer = (state = [], action) => {
+    const tagsInitialState = [];
+
+    const tagsReducer = (state = tagsInitialState, action) => {
+        switch(action.type) {
+            case "SET":
+                return action.payload.tags.map(x => ({...x, isSelected: false, isDisplayed: true }));
+            case "ADD_SELECTED":
+            case "REMOVE_SELECTED":
+                const modifiedTags = [...state];
+                const selectedTagIndex = modifiedTags.findIndex((x) => x.id === action.payload.selectedTagId);
+                modifiedTags[selectedTagIndex].isSelected = action.type === "ADD_SELECTED";
+                return modifiedTags;
+            default:
+                return state;
+        }
+    }
+
+    const [tagsState, dispatchTagsState] = useReducer(tagsReducer, tagsInitialState);
+    const getSelectedTags = () => tagsState.filter((x) => x.isSelected);
+    const getNotSelectedTags = () => tagsState.filter((x) => !x.isSelected);
+
+    const bookmarksInitialState = [];
+
+    const bookmarksReducer = (state = bookmarksInitialState, action) => {
         switch(action.type) {
             case "SET":
                 return action.payload.bookmarks.map(x => ({...x, isSelected: false, isDisplayed: true}));
@@ -81,17 +86,14 @@ export function BookmarksListView(props) {
             case "HIDE_SELECTED":
                 return state.filter((x) => !action.payload.selectedBookmarkIds.includes(x.id));
             case "SELECT_ALL":
-                return state.map(x => ({...x, isSelected: true}));
+                return state.map(x => ({...x, isSelected: x.isDisplayed}));
             case "UNSELECT_ALL":
                 return state.map(x => ({...x, isSelected: false}));
             case "DISPLAY_ALL":
                 return state.map(x => ({...x, isDisplayed: true}));
             case "SEARCH":
-                if(!searchString) {
-                    dispatchBookmarksState({type: "DISPLAY_ALL"});
-                }
-                
-                return state.map(x => ({...x, isDisplayed: containsSubstring(x, searchString)}));
+                return state.map(x => ({...x, isDisplayed: (getSelectedTags().length <= 0 || isSubset(x.tags.map(x => x.id), getSelectedTags().map(x => x.id)))
+                    && (!searchString || containsSubstring(x, searchString))}));
             default:
                 return state;
         }
@@ -99,16 +101,11 @@ export function BookmarksListView(props) {
 
     const [bookmarksState, dispatchBookmarksState] = useReducer(bookmarksReducer, []);
     const onBookmarkSelected = (isBookmarkSelected, bookmark) => dispatchBookmarksState({type: isBookmarkSelected ?  "ADD_SELECTED" : "REMOVE_SELECTED", payload: {selectedBookmarkId: bookmark.id}});
-    const getSelectedBookmarksCount = () => bookmarksState.filter((x) => x.isSelected).length;
-    const getSelectedBookmarks = () => bookmarksState.filter((x) => x.isSelected);
-    const getAreAllBookmarksSelected = () => bookmarksState.every(x => x.isSelected);
-    const getFilteredBookmarks = () => {
-        if (getSelectedTags().length <= 0) {
-            return bookmarksState.filter(x => x.isDisplayed);
-        } else {
-            return bookmarksState.filter(x => isSubset(x.tags.map(x => x.id), getSelectedTags().map(x => x.id)));
-        }
-    }
+    const getDisplayedBookmarksCount = () => bookmarksState.filter(x => x.isDisplayed).length;
+    const getSelectedBookmarksCount = () => bookmarksState.filter(x => x.isSelected && x.isDisplayed).length;
+    const getSelectedBookmarks = () => bookmarksState.filter((x) => x.isSelected && x.isDisplayed);
+    const getAreAllBookmarksSelected = () => bookmarksState.filter(x => x.isDisplayed).every(x => x.isSelected);
+    const getFilteredBookmarks = () => bookmarksState.filter(x => x.isDisplayed);
 
     const onDeleteSelectedBookmarks = async (ids) => {
         if(ids.length <= 0) {
@@ -180,44 +177,40 @@ export function BookmarksListView(props) {
         
     };
 
-    const fetchBookmarks = async() => {
-        const accessToken = await getAccessTokenSilently();
-        const { data, error } = await getAllBookmarks(accessToken, props.showHidden);
+    const onTagSelected = (isTagSelected, tag) => {
+        dispatchTagsState({type: isTagSelected ? "ADD_SELECTED" : "REMOVE_SELECTED", payload: {selectedTagId: tag.id}});
+        dispatchBookmarksState({type: "SEARCH"});      
+    };
 
-        if(error) {
-            dispatchAlertMessageState({type: "SHOW_ALERT", payload: {show: true, alertType: "danger", "message": `Error fetching bookmarks: ${error.message}`}});
-        } else {
-            dispatchBookmarksState({type: "SET", payload: {bookmarks: data}});
-            dispatchTagsState({type: "SET"});
-        }
-    }
+    const handleSearch = (e) => {
+        e.preventDefault();
+        setSearchString(e.target[0].value);
+        dispatchBookmarksState({type: "SEARCH"});
+    };
 
-    
-    const tagsReducer = (state = [], action) => {
-        switch(action.type) {
-            case "SET":
-                return flattenTagArrays(bookmarksState.map(x => x.tags)).map(x => Object.assign({}, x, {isSelected : false}));
-            case "ADD_SELECTED":
-            case "REMOVE_SELECTED":
-                const modifiedTags = [...state];
-                const selectedTagIndex = modifiedTags.findIndex((x) => x.id === action.payload.selectedTagId);
-                modifiedTags[selectedTagIndex].isSelected = action.type === "ADD_SELECTED";
-                return modifiedTags;
-            default:
-                return state;
-        }
-    }
-    
-    const [tagsState, dispatchTagsState] = useReducer(tagsReducer, []);
-    const onTagSelected = (isTagSelected, tag) => dispatchTagsState({type: isTagSelected ? "ADD_SELECTED" : "REMOVE_SELECTED", payload: {selectedTagId: tag.id}})
-    const getSelectedTags = () => tagsState.filter((x) => x.isSelected);
-    const getNotSelectedTags = () => tagsState.filter((x) => !x.isSelected);
+    const handleSearchStringChange = (e) => {
+        setSearchString(e.target.value);
+        dispatchBookmarksState({type: "SEARCH"});
+    };
 
     useEffect(() => {
         dispatchSplashScreenState({type: "SHOW_SPLASH_SCREEN", payload: {message: "Retrieving Bookmarks..."}});
-        fetchBookmarks();
 
-        dispatchSplashScreenState({type: "HIDE_SPLASH_SCREEN", payload: {message: null}});
+        const fetchBookmarks = async() => {
+            const accessToken = await getAccessTokenSilently();
+            const { data, error } = await getAllBookmarks(accessToken, props.showHidden);
+    
+            if(error) {
+                dispatchAlertMessageState({type: "SHOW_ALERT", payload: {show: true, alertType: "danger", "message": `Error fetching bookmarks: ${error.message}`}});
+            } else {
+                dispatchBookmarksState({type: "SET", payload: {bookmarks: data}});
+                dispatchTagsState({type: "SET", payload: {tags: flattenTagArrays(data.map(x => x.tags))}});    
+            }
+    
+            dispatchSplashScreenState({type: "HIDE_SPLASH_SCREEN", payload: {message: null}});
+        }
+
+        fetchBookmarks();
     }, []);
     
     return(
@@ -284,26 +277,31 @@ export function BookmarksListView(props) {
                         </Col>
                     </Row>
                     <Row>
-                        <Col xs="2" className="mb-3">
-                            {
-                                bookmarksState.length > 0 &&
-                                    <Button variant="primary" onClick={() => dispatchBookmarksState({type: getAreAllBookmarksSelected() ? "UNSELECT_ALL" : "SELECT_ALL"})}>{getAreAllBookmarksSelected() ? "Unselect All" : "Select All" }</Button>
-                            }
-                        </Col>
-                        <Col xs="7" className="mb-3">
-                            {
-                                getSelectedBookmarksCount() > 0 && 
-                                    <div className="d-flex justify-content-end align-items-center">
-                                        <span className="fs-5 me-2"> {getSelectedBookmarksCount()} selected</span>
-                                        <Button variant="primary" className="me-2" onClick={() => handleHideBookmarks(getSelectedBookmarks().map(x => x.id))}>{props.showHidden ? "Unhide" : "Hide"}</Button>
-                                        <Button 
-                                            variant="danger"
-                                            onClick={handleDeleteMultipleBookmarks}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </div>
-                            }
+                        <Col xs="9" className="mb-3">
+                            <div className="d-flex justify-content-start align-items-center">
+                                {
+                                    getDisplayedBookmarksCount() <= 0 &&
+                                        <span className="fs-4">No bookmarks to display</span>
+                                }
+
+                                {
+                                    getDisplayedBookmarksCount() > 0 && 
+                                        <Button className="me-2" variant="primary" onClick={() => dispatchBookmarksState({type: getAreAllBookmarksSelected() ? "UNSELECT_ALL" : "SELECT_ALL"})}>{getAreAllBookmarksSelected() ? "Unselect All" : "Select All" }</Button>
+                                }
+
+                                {
+                                    getSelectedBookmarksCount() > 0 && 
+                                        <DropdownButton variant="secondary" title={`${getSelectedBookmarksCount()} selected`}>
+                                            <Dropdown.Item onClick={() => handleHideBookmarks(getSelectedBookmarks().map(x => x.id))}>
+                                                {props.showHidden ? "Unhide" : "Hide"}
+                                            </Dropdown.Item>
+                                            <Dropdown.Item onClick={handleDeleteMultipleBookmarks}>
+                                            <span className="text-danger">Delete</span>
+                                            </Dropdown.Item>
+                                        </DropdownButton>
+                                }
+                                
+                            </div>
                         </Col>
                         <Col xs="3" className="mb-3">
                             { 
