@@ -15,7 +15,7 @@ export function Bookmark(props) {
             </Col>
             <Col xs={11}>
                 <a href="#" style={{textDecoration: "none"}}>{props.bookmark.title}</a>
-                <div className="font-weight-normal">{props.bookmark.description.substring(0, 100)}</div>
+                <div className="font-weight-normal">{`${props.bookmark.description.substring(0, 97)}${props.bookmark.description.length >= 97 ? "..." : ""}`}</div>
                 <div>
                     {
                         props.bookmark.tags.map((tag) => <Tag key={props.bookmark.id-tag.id} tag={tag} />)

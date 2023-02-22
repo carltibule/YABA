@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using System.Net;
 using YABA.API.ViewModels;
 using YABA.API.ViewModels.Bookmarks;
 using YABA.API.ViewModels.Tags;
@@ -13,7 +14,9 @@ namespace YABA.API.Settings
         public AutoMapperProfile()
         {
             CreateMap<UserDTO, UserResponse>();
-            CreateMap<BookmarkDTO, BookmarkResponse>();
+            CreateMap<BookmarkDTO, BookmarkResponse>()
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => WebUtility.HtmlDecode(src.Title)))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => WebUtility.HtmlDecode(src.Description)));
             CreateMap<WebsiteMetaDataDTO, GetWebsiteMetaDataResponse>();
             CreateMap<BookmarkDTO, PatchBookmarkRequest>();
             CreateMap<PatchBookmarkRequest, UpdateBookmarkRequestDTO>();
