@@ -1,11 +1,12 @@
-﻿using YABA.Common.DTOs;
+﻿using System.Threading.Tasks;
+using YABA.Common.DTOs;
 
 namespace YABA.Service.Interfaces
 {
     public interface IUserService
     {
-        public bool IsUserRegistered(string authProviderId);
-        public UserDTO RegisterUser(string authProviderId);
-        public int GetUserId(string authProviderId);
+        bool IsUserRegistered(string authProviderId);
+        Task<UserDTO> RegisterUser(string authProviderId);
+        int GetUserId(string authProviderId);
     }
 }
