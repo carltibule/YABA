@@ -19,8 +19,6 @@ namespace YABA.API.Middlewares
         {
             if (httpContext.User != null && httpContext.User.Identity.IsAuthenticated)
             {
-                var claims = new List<Claim>();
-
                 var userAuthProviderId = httpContext.User.Identity.GetAuthProviderId();
 
                 if (!string.IsNullOrEmpty(userAuthProviderId))

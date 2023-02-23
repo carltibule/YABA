@@ -27,7 +27,7 @@ namespace YABA.API.Controllers
         [ProducesResponseType(typeof(UserResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
-        public IActionResult Register()
+        public async Task<IActionResult> Register()
         {
             var authProviderId = this.GetAuthProviderId();
 
@@ -37,7 +37,7 @@ namespace YABA.API.Controllers
 
             if (isRegistered) return NoContent();
 
-            var registedUser = _userService.RegisterUser(authProviderId);
+            var registedUser = await _userService.RegisterUser(authProviderId);
             return Ok(_mapper.Map<UserResponse>(registedUser));
         }
     }
