@@ -106,7 +106,7 @@ export function BookmarkDetailView() {
         enableReinitialize: true,
         onSubmit: async(values) => {
             const isUpdate = values.id > 0
-            values.tags = values.tags ? values.tags.split(", ") : null;
+            values.tags = values.tags ? values.tags.toLowerCase().split(/[\s,]+/) : null;
             dispatchAlertMessageState({ type: "CLOSE_ALERT"});
             dispatchSplashScreenState({type: "SHOW_SPLASH_SCREEN", message: isUpdate ? "Updating Bookmark entry" : "Creating new Bookmark"});
             const accessToken = await getAccessTokenSilently();
@@ -210,6 +210,9 @@ export function BookmarkDetailView() {
                                     defaultValue={formik.values.tags}
                                     onChange={formik.handleChange}
                                 />
+                                <Form.Text muted>
+                                    Tags will be separated by commas or spaces
+                                </Form.Text>
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Title:</Form.Label>
@@ -220,7 +223,7 @@ export function BookmarkDetailView() {
                                     defaultValue={formik.values.title}
                                     onChange={formik.handleChange}
                                 />
-                                <Form.Text className="text-muted">
+                                <Form.Text muted>
                                     When left blank, we'll use the URL's Title
                                 </Form.Text>
                             </Form.Group>
