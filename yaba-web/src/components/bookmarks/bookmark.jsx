@@ -1,12 +1,16 @@
 import React from "react";
 import { Row, Col, Form, Button } from "../external";
 import DateTimeHelper from "../../utils/dateTimeHelper";
-import "../../styles/component/bookmark.css";
+import { getHighlightedText } from "../../utils";
 import { useNavigate } from "react-router-dom";
 import { Tag } from "../../components";
 
 export function Bookmark(props) {
     const navigate = useNavigate();
+
+    const getTruncatedDescription = () => `${props.bookmark.description.substring(0, 97)}${props.bookmark.description.length >= 97 ? "..." : ""}`;
+    const getHighlightedTitle = () => getHighlightedText(props.bookmark.title, props.searchString);
+    const getHighlightedDescription = () => getHighlightedText(getTruncatedDescription(), props.searchString)
 
     return <div className="mb-3">
         <Row>
@@ -14,11 +18,11 @@ export function Bookmark(props) {
                 <Form.Check onChange={(e) => {props.onBookmarkSelected(e.target.checked)}} checked={props.bookmark.isSelected} />
             </Col>
             <Col xs={11}>
-                <a href="#" style={{textDecoration: "none"}}>{props.bookmark.title}</a>
-                <div className="font-weight-normal">{`${props.bookmark.description.substring(0, 97)}${props.bookmark.description.length >= 97 ? "..." : ""}`}</div>
+                <a href={props.bookmark.url} target="_blank" style={{textDecoration: "none"}}>{ getHighlightedTitle() }</a>
+                <div className="font-weight-normal">{ getHighlightedDescription()}</div>
                 <div>
                     {
-                        props.bookmark.tags.map((tag) => <Tag key={props.bookmark.id-tag.id} tag={tag} />)
+                        props.bookmark.tags.map((tag) => <Tag key={props.bookmark.id-tag.id} tag={tag} searchString={props.searchString}/>)
                     }
                 </div>
                 <div>

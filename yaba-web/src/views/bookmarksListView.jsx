@@ -323,6 +323,7 @@ export function BookmarksListView(props) {
                                         onBookmarkSelected={(selected) => onBookmarkSelected(selected, bookmark)}
                                         onDeleteClicked={() => handleDeleteBookmark(bookmark.id)}
                                         onHideClicked={() => handleHideBookmarks([bookmark.id])}
+                                        searchString={searchString}
                                     />
                                 })
                             }
