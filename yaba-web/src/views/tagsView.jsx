@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { containsSubstring } from "../utils";
+import { containsSubstring, getHighlightedText } from "../utils";
 import { SplashScreen, SearchForm, UpsertTagModal, InterceptModal } from "../components";
 import { Alert, Button, Col, Container, Dropdown, DropdownButton, Form, Row, Table } from "../components/external";
 import { getAllTags, createNewTag, updateTag, deleteTags, hideTags } from "../api";
@@ -9,24 +9,6 @@ export function TagsView(props) {
     const { getAccessTokenSilently } = useAuth0();
 
     const [searchString, setSearchString] = useState("");
-    const handleSearch = (e) => {
-        e.preventDefault();
-
-        if(!searchString) {
-            dispatchTagsState({type: "DISPLAY_ALL"});  
-        } else {
-            dispatchTagsState({type: "SEARCH"});
-        }
-    };
-
-    const handleSearchStringChange = (e) => {
-        if(!e.target.value) {
-            dispatchTagsState({type: "DISPLAY_ALL"});
-        } else {
-            setSearchString(e.target.value);
-        }
-    };
-
     const [isAllTagsSelected, setAllTagsSelected] = useState(false);
 
     const initialSplashScreenState = { show: false, message: null };
@@ -127,11 +109,7 @@ export function TagsView(props) {
                 newState = state.map(x => ({...x, isDisplayed: true}));
                 break;
             case "SEARCH":
-                if(!searchString) {
-                    dispatchTagsState({type: "DISPLAY_ALL"});
-                }
-                
-                newState = state.map(x => ({...x, isDisplayed: containsSubstring(x, searchString)}));
+                newState = state.map(x => ({...x, isDisplayed: !searchString || containsSubstring(x, searchString)}));
                 break;
             case "TAG_UPDATE":
                 newState = [...state];
@@ -314,6 +292,17 @@ export function TagsView(props) {
         }
     };
 
+    const handleSearch = (e) => {
+        e.preventDefault();
+        setSearchString(e.target[0].value);
+        dispatchTagsState({type: "SEARCH"});
+    };
+
+    const handleSearchStringChange = (e) => {
+        setSearchString(e.target.value);
+        dispatchTagsState({type: "SEARCH"});
+    };
+
     useEffect(() => {
         dispatchSplashScreenState({type: "SHOW_SPLASH_SCREEN", payload: {message: "Retrieving Tags..."}});
         fetchTags();
@@ -409,7 +398,7 @@ export function TagsView(props) {
                                                                 checked={tag.isSelected}
                                                             />
                                                         </td>
-                                                        <td>{tag.name}</td>
+                                                        <td>{getHighlightedText(tag.name, searchString)}</td>
                                                         <td>
                                                             <span className={tag.isHidden ? "text-danger" : "text-dark"}>{ tag.isHidden ? "Yes" : "No" }</span>
                                                         </td>
