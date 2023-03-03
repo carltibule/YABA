@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using System.Linq;
+using System.Threading.Tasks;
 using YABA.Common.DTOs;
 using YABA.Data.Context;
 using YABA.Models;
@@ -25,7 +26,7 @@ namespace YABA.Service
             return _roContext.Users.Any(x => x.Auth0Id == authProviderId);
         }
 
-        public UserDTO RegisterUser(string authProviderId)
+        public async Task<UserDTO> RegisterUser(string authProviderId)
         {
             if(IsUserRegistered(authProviderId))
             {
@@ -39,7 +40,7 @@ namespace YABA.Service
             };
 
             var registedUser = _context.Users.Add(userToRegister);
-            return _context.SaveChanges() > 0 ? _mapper.Map<UserDTO>(registedUser.Entity) : null;
+            return await _context.SaveChangesAsync() > 0 ? _mapper.Map<UserDTO>(registedUser.Entity) : null;
         }
 
         public int GetUserId(string authProviderId)
