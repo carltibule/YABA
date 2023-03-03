@@ -24,6 +24,13 @@ namespace YABA.API.Middlewares
                 if (!string.IsNullOrEmpty(userAuthProviderId))
                 {
                     var userId = userService.GetUserId(userAuthProviderId);
+
+                    if(userId <= 0)
+                    {
+                        var registedUser = await userService.RegisterUser(userAuthProviderId);
+                        userId = registedUser.Id;
+                    }
+
                     httpContext.User.Identities.FirstOrDefault().AddClaim(new Claim(ClaimsLookup.UserId.GetClaimName(), userId.ToString()));
                 }
             }
