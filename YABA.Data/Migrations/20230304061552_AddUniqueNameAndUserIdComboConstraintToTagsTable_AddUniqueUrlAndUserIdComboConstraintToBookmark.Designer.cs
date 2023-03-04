@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using YABA.Data.Context;
@@ -9,9 +10,10 @@ using YABA.Data.Context;
 namespace YABA.Data.Migrations
 {
     [DbContext(typeof(YABABaseContext))]
-    partial class YABABaseContextModelSnapshot : ModelSnapshot
+    [Migration("20230304061552_AddUniqueNameAndUserIdComboConstraintToTagsTable_AddUniqueUrlAndUserIdComboConstraintToBookmark")]
+    partial class AddUniqueNameAndUserIdComboConstraintToTagsTable_AddUniqueUrlAndUserIdComboConstraintToBookmark
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

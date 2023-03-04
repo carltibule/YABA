@@ -39,7 +39,11 @@ namespace YABA.Data.Context
                 .IsUnique();
 
             modelBuilder.Entity<Tag>()
-                .HasIndex(x => x.Name)
+                .HasIndex(x => new { x.Name, x.UserId })
+                .IsUnique();
+
+            modelBuilder.Entity<Bookmark>()
+                .HasIndex(x => new { x.Url, x.UserId })
                 .IsUnique();
         }
 
