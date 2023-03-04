@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using YABA.API.Settings;
 using YABA.API.ViewModels;
 using YABA.Service.Interfaces;
 
@@ -24,7 +25,7 @@ namespace YABA.API.Controllers
         }
 
         [HttpGet]
-        [Obsolete]
+        [DevOnly]
         [Route("GetWebsiteMetaData")]
         [ProducesResponseType(typeof(GetWebsiteMetaDataResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]

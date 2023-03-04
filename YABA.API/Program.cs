@@ -12,6 +12,7 @@ using YABA.API.Settings.Swashbuckle;
 using YABA.Data.Configuration;
 using YABA.Data.Context;
 using YABA.Service.Configuration;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -76,6 +77,10 @@ builder.Services.AddSwaggerGen(
              c.ResolveConflictingActions(apiDescription => apiDescription.First());
          }
 );
+
+// Add Serilog
+Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
+builder.Host.UseSerilog();
 
 var app = builder.Build();
 

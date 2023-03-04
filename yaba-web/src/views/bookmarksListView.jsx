@@ -276,45 +276,44 @@ export function BookmarksListView(props) {
                             <hr className="mt-1" />
                         </Col>
                     </Row>
-                    <Row>
-                        <Col xs="9" className="mb-3">
-                            <div className="d-flex justify-content-start align-items-center">
+                    {
+                        (bookmarksState.length > 0 || getSelectedBookmarksCount() > 0) && <Row>
+                            <Col xs="2" className="mb-3">
                                 {
-                                    getDisplayedBookmarksCount() <= 0 &&
-                                        <span className="fs-4">No bookmarks to display</span>
+                                    bookmarksState.length > 0 &&
+                                        <Button variant="primary" onClick={() => dispatchBookmarksState({type: getAreAllBookmarksSelected() ? "UNSELECT_ALL" : "SELECT_ALL"})}>{getAreAllBookmarksSelected() ? "Unselect All" : "Select All" }</Button>
                                 }
-
-                                {
-                                    getDisplayedBookmarksCount() > 0 && 
-                                        <Button className="me-2" variant="primary" onClick={() => dispatchBookmarksState({type: getAreAllBookmarksSelected() ? "UNSELECT_ALL" : "SELECT_ALL"})}>{getAreAllBookmarksSelected() ? "Unselect All" : "Select All" }</Button>
-                                }
-
+                            </Col>
+                            <Col xs="7" className="mb-3">
                                 {
                                     getSelectedBookmarksCount() > 0 && 
-                                        <DropdownButton variant="secondary" title={`${getSelectedBookmarksCount()} selected`}>
-                                            <Dropdown.Item onClick={() => handleHideBookmarks(getSelectedBookmarks().map(x => x.id))}>
-                                                {props.showHidden ? "Unhide" : "Hide"}
-                                            </Dropdown.Item>
-                                            <Dropdown.Item onClick={handleDeleteMultipleBookmarks}>
-                                            <span className="text-danger">Delete</span>
-                                            </Dropdown.Item>
-                                        </DropdownButton>
+                                        <div className="d-flex justify-content-end align-items-center">
+                                            <span className="fs-5 me-2"> {getSelectedBookmarksCount()} selected</span>
+                                            <Button variant="primary" className="me-2" onClick={() => handleHideBookmarks(getSelectedBookmarks().map(x => x.id))}>{props.showHidden ? "Unhide" : "Hide"}</Button>
+                                            <Button 
+                                                variant="danger"
+                                                onClick={handleDeleteMultipleBookmarks}
+                                            >
+                                                Delete
+                                            </Button>
+                                        </div>
                                 }
-                                
-                            </div>
-                        </Col>
-                        <Col xs="3" className="mb-3">
-                            { 
-                                getSelectedTags().length > 0 && (
-                                    getSelectedTags().map((tag) => {
-                                        return <Button key={tag.id} variant="primary" style={{textDecoration: "none", cursor: "pointer" }}  className="badge rounded-pill text-bg-primary me-2" onClick={() => onTagSelected(false, tag)}>#{tag.name} | x</Button>
-                                    })
-                                )
-                            }
-                        </Col>
-                    </Row>
+                            </Col>
+                            <Col xs="3" className="mb-3">
+                                { 
+                                    getSelectedTags().length > 0 && (
+                                        getSelectedTags().map((tag) => {
+                                            return <Button key={tag.id} variant="primary" style={{textDecoration: "none", cursor: "pointer" }}  className="badge rounded-pill text-bg-primary me-2" onClick={() => onTagSelected(false, tag)}>#{tag.name} | x</Button>
+                                        })
+                                    )
+                                }
+                            </Col>
+                        </Row>
+                    }
+                    
                     <Row>
                         <Col xs="9">
+                            { getFilteredBookmarks().length <= 0 && <div className="fs-3">No Bookmarks found</div> }
                             {
                                 getFilteredBookmarks().map((bookmark) => {
                                     return <Bookmark 
@@ -329,6 +328,7 @@ export function BookmarksListView(props) {
                             }
                         </Col>
                         <Col xs="3">
+                            { getTagGroups(getNotSelectedTags()).length <= 0 && <div className="fs-3">No Tags gound</div> }
                             {
                                 getTagGroups(getNotSelectedTags()).map((group) => {
                                     return <div key={group.name} className="mb-3">
