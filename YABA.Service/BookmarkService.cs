@@ -253,6 +253,7 @@ namespace YABA.Service
         private void UpdateBookmarkWithMetaData(IBookmark bookmark)
         {
             var webClient = new WebClient();
+            webClient.Headers.Add("User-Agent", "APIClient");
             var sourceData = webClient.DownloadString(bookmark.Url);
             var title = Regex.Match(sourceData, @"\<title\b[^>]*\>\s*(?<Title>[\s\S]*?)\</title\>", RegexOptions.IgnoreCase).Groups["Title"].Value;
             var description = string.Empty;
