@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using YABA.Models.Interfaces;
 
@@ -14,5 +15,7 @@ namespace YABA.Models
         [ForeignKey(nameof(User))]
         public int UserId { get; set; }
         public virtual User User { get; set; }
+
+        public virtual ICollection<BookmarkTag> TagBookmarks { get; set; }
     }
 }
