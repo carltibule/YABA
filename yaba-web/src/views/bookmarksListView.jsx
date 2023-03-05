@@ -328,7 +328,7 @@ export function BookmarksListView(props) {
                             }
                         </Col>
                         <Col xs="3">
-                            { getTagGroups(getNotSelectedTags()).length <= 0 && <div className="fs-3">No Tags gound</div> }
+                            { getTagGroups(getNotSelectedTags()).length <= 0 && <div className="fs-3">No Tags found</div> }
                             {
                                 getTagGroups(getNotSelectedTags()).map((group) => {
                                     return <div key={group.name} className="mb-3">

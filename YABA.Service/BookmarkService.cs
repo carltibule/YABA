@@ -2,6 +2,7 @@
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -40,26 +41,28 @@ namespace YABA.Service
         public IEnumerable<BookmarkDTO> GetAll(bool showHidden = false)
         {
             var currentUserId = GetCurrentUserId();
-
-            var bookmarkTagsLookup = _roContext.BookmarkTags
-                .Include(x => x.Bookmark)
-                .Include(x => x.Tag)
-                .Where(x => x.Bookmark.UserId == currentUserId && x.Tag.UserId == currentUserId)
-                .ToList()
-                .GroupBy(x => x.BookmarkId)
-                .ToDictionary(k => k.Key, v => new KeyValuePair<Bookmark, List<Tag>>(v.FirstOrDefault()?.Bookmark, v.Select(x => x.Tag).ToList()));
             var userBookmarkDTOs = new List<BookmarkDTO>();
 
-            foreach (var bookmarkTag in bookmarkTagsLookup)
+
+            var showHiddenCondition = new Func<Bookmark, bool>(b => b.IsHidden || b.BookmarkTags.Where(x => x.Tag.UserId == currentUserId).Any(x => x.Tag.IsHidden));
+            var showNotHiddenCondition = new Func<Bookmark, bool>(b => !b.IsHidden && b.BookmarkTags.Where(x => x.Tag.UserId == currentUserId).All(bt => !bt.Tag.IsHidden));
+
+            var filteredBookmarks = _roContext.Bookmarks
+                .Include(b => b.BookmarkTags)
+                .ThenInclude(bt => bt.Tag)
+                .Where(b => b.UserId == currentUserId)
+                .Where(showHidden ? showHiddenCondition : showNotHiddenCondition)
+                .ToList();
+
+            foreach(var bookmark in filteredBookmarks)
             {
-                if ((showHidden && (bookmarkTag.Value.Key.IsHidden || bookmarkTag.Value.Value.Any(x => x.IsHidden))) // If showHidden = true, only add Bookmarks that are marked Hidden OR when any of its Tags are marked Hidden
-                    || (!showHidden && !bookmarkTag.Value.Key.IsHidden && bookmarkTag.Value.Value.All(x => !x.IsHidden))) // If showHidden = false, only add when Bookmark is not marked Hidden AND when any of its Tags are not marked as Hidden
-                {
-                    var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmarkTag.Value.Key);
-                    var bookmarkTagDTOs = _mapper.Map<IEnumerable<TagDTO>>(bookmarkTag.Value.Value);
-                    bookmarkDTO.Tags.AddRange(bookmarkTagDTOs);
-                    userBookmarkDTOs.Add(bookmarkDTO);
-                }
+                var isBookmarkHidden = bookmark.IsHidden;
+                var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark);
+                
+                var bookmarkTags = bookmark.BookmarkTags.Select(x => x.Tag);
+                bookmarkDTO.Tags = _mapper.Map<List<TagDTO>>(bookmarkTags);
+
+                userBookmarkDTOs.Add(bookmarkDTO);
             }
 
             return userBookmarkDTOs;
