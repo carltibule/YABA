@@ -113,14 +113,10 @@ namespace YABA.Service
             bookmark.Url = !string.IsNullOrEmpty(request.Url) ? request.Url : bookmark.Url;
             UpdateBookmarkWithMetaData(bookmark);
 
-            if (await _context.SaveChangesAsync() > 0)
-            {
-                var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark);
-                bookmarkDTO.Tags = tags;
-                return bookmarkDTO;
-            }
-
-            return null;
+            await _context.SaveChangesAsync();
+            var bookmarkDTO = _mapper.Map<BookmarkDTO>(bookmark);
+            bookmarkDTO.Tags = tags;
+            return bookmarkDTO;
         }
 
         public async Task<IEnumerable<TagDTO>?> UpdateBookmarkTags(int id, IEnumerable<string> tags)

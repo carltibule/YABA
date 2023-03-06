@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useState } from "react";
-import { Alert, Col, Container, Row, Button, Modal, Dropdown, DropdownButton } from "../components/external";
+import { Alert, Col, Container, Row, Button, Modal } from "../components/external";
 import { Bookmark } from "../components";
 import { useAuth0 } from "@auth0/auth0-react";
 import { deleteBookmarks, getAllBookmarks, hideBookmarks } from "../api";
