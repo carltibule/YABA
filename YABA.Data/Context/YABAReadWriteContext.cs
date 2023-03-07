@@ -9,6 +9,8 @@ namespace YABA.Data.Context
 {
     public class YABAReadWriteContext : YABABaseContext
     {
+        public YABAReadWriteContext() : base() { }
+
         public YABAReadWriteContext(DbContextOptions<YABABaseContext> options) : base(options)
         {
             ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.TrackAll;
