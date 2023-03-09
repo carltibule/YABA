@@ -12,6 +12,7 @@ namespace YABA.Data.Context
 {
     public class YABABaseContext : DbContext
     {
+        public YABABaseContext() : base() { }
         public YABABaseContext(DbContextOptions<YABABaseContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -47,10 +48,10 @@ namespace YABA.Data.Context
                 .IsUnique();
         }
 
-        public DbSet<Bookmark> Bookmarks { get; set; }
-        public DbSet<Tag> Tags { get; set; }
-        public DbSet<BookmarkTag> BookmarkTags { get; set; }
-        public DbSet<User> Users { get; set; }
+        public virtual DbSet<Bookmark> Bookmarks { get; set; }
+        public virtual DbSet<Tag> Tags { get; set; }
+        public virtual DbSet<BookmarkTag> BookmarkTags { get; set; }
+        public virtual DbSet<User> Users { get; set; }
 
         private static LambdaExpression ConvertFilterExpression<TInterface>(
                             Expression<Func<TInterface, bool>> filterExpression,
