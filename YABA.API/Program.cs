@@ -13,6 +13,7 @@ using YABA.Data.Configuration;
 using YABA.Data.Context;
 using YABA.Service.Configuration;
 using Serilog;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -49,6 +50,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddServiceProjectDependencyInjectionConfiguration(configuration);
 builder.Services.AddDataProjectDependencyInjectionConfiguration(configuration);
 builder.Services.AddControllers().AddNewtonsoftJson();
+builder.Services.AddHealthChecks();
 
 // Add AutoMapper profiles
 var mapperConfiguration = new MapperConfiguration(mapperConfiguration =>
@@ -78,8 +80,14 @@ builder.Services.AddSwaggerGen(
          }
 );
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
+
 // Add Serilog
-Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
+Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configuration).Enrich.FromLogContext().CreateLogger();
 builder.Host.UseSerilog();
 
 var app = builder.Build();
@@ -100,6 +108,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseForwardedHeaders();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -107,6 +116,7 @@ app.MapControllers();
 
 // Add custom middlewares
 app.UseMiddleware<AddCustomClaimsMiddleware>();
+app.UseMiddleware<AddCustomLoggingPropertiesMiddleware>();
 
 app.UseCors(x => x
     .AllowAnyOrigin()
@@ -115,5 +125,6 @@ app.UseCors(x => x
 
 var webClientUrl = configuration.GetSection("WebClient").GetValue<string>("Url");
 app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().WithOrigins(webClientUrl));
+app.MapHealthChecks("/Pulse");
 
 app.Run();
